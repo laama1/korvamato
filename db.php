@@ -2,7 +2,7 @@
 
 // AUTHOR: Lasse Pihlainen
 // CREATED: 22.10.2017
-// Edited: 23.10.2017,
+// Edited: 23.10.2017, 20.12.2017
 // LICENSE: BSD
 
 
@@ -47,8 +47,6 @@ class korvamatodb extends SQLite3 {
         $this->pi("Creating Database for Korvamato");
 
         $sqlString = "CREATE VIRTUAL TABLE korvamadot using FTS4(NICK,PVM,QUOTE,INFO1,INFO2,CHANNEL,ARTIST,TITLE,LINK1,LINK2,DELETED);";
-        //CREATE TABLE MEASUREMENTS (TYPE TEXT, VALUE TEXT, DEVICEID TEXT NOT NULL, SENSORID TEXT, DATETIME INT NOT NULL, DELETED INT DEFAULT 0, DEVICETIME TEXT, BOOTCOUNT INT);";
-        //CREATE VIRTUAL TABLE MEASUREMENTS (TYPE, VALUE, DEVICEID, SENSORID, DATETIME, DELETED, DEVICETIME, BOOTCOUNT);";
         $ret = 0;
         try {
             $this->db = new PDO("sqlite:$this->dbpath");
@@ -70,58 +68,6 @@ class korvamatodb extends SQLite3 {
         return $ret;
     }
 
-
-    public function getAllMeasurementsOfDevice($arg = null) {
-        if ($arg === null) return;
-        # MEASUREMENTS (TYPE, VALUE, DEVICEID, SENSORID, DATETIME, DELETED, DEVICETIME, BOOTCOUNT);";
-        $sqlString = "Select * from MEASUREMENTS where DEVICEID = '$arg'";
-        return $this->getResultsFromDBQuery($sqlString);
-    }
-
-    # Add new Temperature measurement to table.
-    public function addNewMeasurementToDB($type = null, $device = null, $value = null, $esptime = null, $espbc = null, $espSensorID = null) {
-        if ($device === null || $value === null) return -1;
-        if ($this->searchDeviceFromDB($device)) {
-            # MEASUREMENTS (TYPE, VALUE, DEVICEID, SENSORID, DATETIME, DELETED, DEVICETIME, BOOTCOUNT);";
-            $newtime = time();
-            $this->pi("Adding new measurement type: $type, value: $value, device: $device, sensor: $espSensorID, time: $newtime, esptime: $esptime, bootcount: $espbc");
-            $sqlString = "INSERT INTO MEASUREMENTS (TYPE, VALUE, DEVICEID, SENSORID, DATETIME, DELETED, DEVICETIME, BOOTCOUNT)
-                         VALUES('$type', '$value', '$device', '$espSensorID', '$newtime', 0, '0', $espbc)";
-            $rtvalue = $this->insertIntoDB($sqlString);
-            $this->pi($rtvalue);
-            return $rtvalue;
-        } else {
-            $this->addDevice($device);
-            # TODO: Add measurement?
-        }
-    }
-
-    public function getAllDevicesFromDB() {
-        $sqlString = "Select * from devices";
-        return $this->getResultsFromDBQuery($sqlString);
-    }
-
-    public function searchDeviceFromDB($searchword = null) {
-        if ($searchword === null ) return -1;
-        # DEVICES (TYPE, NAME, CREATOR, DATETIME, NICK, DELETED)
-        $sqlString = "SELECT * from DEVICES where name = '$searchword'";
-        #$this->pi("searchDeviceFromDB: $searchword");
-        return $this->getResultsFromDBQuery($sqlString);
-    }
-
-    # add new device to DB
-    private function addDevice($device = null, $creator = null) {
-        if ($device === null) return -1;
-        # TYPE, NAME, CREATOR, DATETIME, NICK, DELETED
-        # DEVICES (TYPE, NAME, CREATOR, DATETIME, NICK, DELETED
-        $timenow = time();
-        $sqlString = "INSERT INTO DEVICES (TYPE, NAME, CREATOR, DATETIME, NICK, DELETED) VALUES('esp', '$device', 'MATTI', '$timenow', '', 0)";
-        //$sqlString2 = "CREATE VIRTUAL TABLE ? using FTS4(indexnbr, word, extrafield1);";
-        $rtvalue = $this->insertIntoDB($sqlString);
-        $this->pi("addDevice: $rtvalue");
-    }
-
-
     public function insertIntoDB($sqlString = null) {
         if ($sqlString === null) return -1;
         $this->pi("insertIntoDB sqlString: " .$sqlString);
@@ -139,9 +85,9 @@ class korvamatodb extends SQLite3 {
                 $this->pe("insertIntoDB prepare statement error.");//: ".$pdostmt->errorInfo);
             }
         } catch(PDOException $e) {
-            $this->pe("insertIntoDB: ".$e);
+            $this->pe("insertIntoDB PDOException: ".$e);
         } catch(EXCeption $e) {
-            $this->pe("insertIntoDB: ".$e);
+            $this->pe("insertIntoDB Exception: ".$e);
         }
         $this->db = null;
         return -2;
@@ -182,11 +128,11 @@ class korvamatodb extends SQLite3 {
 					return $pdostmt;
 				}
 			}
-            $this->pe("Errör. dbpath: ".$this->dbpath);
+            $this->pe("Errör.");
 		} catch(PDOException $e) {
-            $this->pe("getResultHandle: ".$e);
+            $this->pe("getResultHandle PDOException: ".$e);
 		} catch(Exception $e) {
-			$this->pe("getResultHandle: ".$e);
+			$this->pe("getResultHandle Exception: ".$e);
         }
         $this->db = null;
 		return -2;
