@@ -1,5 +1,9 @@
 <?php
 class RESTapiForKorvamato {
+// AUTHOR: Lasse Pihlainen
+// CREATED: x.y.z
+// Edited: 20.12.2017
+// LICENSE: BSD
 
 	protected $db;
 	protected $DEBUG = 0;
@@ -16,25 +20,24 @@ class RESTapiForKorvamato {
 		$method = $_SERVER['REQUEST_METHOD'];
 		$request = explode('/', trim($_SERVER['PATH_INFO'], '/'));
 		$input = json_decode(file_get_contents('php://input'),true);
-		
+		$input2 = json_decode(file_get_contents('php://input'),true);
+
 		$this->pi("server path info:");
 		$this->pi($_SERVER['PATH_INFO']);
 
 
 		$this->pi("input (json decoded):");
 		$this->pa($input);
+		$this->pi("input2 (json decoded):");
+		$this->pa($input2);
+
 		$this->pi("request:");
 		$this->pa(json_encode($request));
 		$this->pi("POST json encoded:");
 		$this->pa(json_encode($_POST) . "<br>\n");
 		$this->pi("method: $method");
 
-
-
-		// connect to the sqlite database
-		//
-		//
-		
+	
 		// retrieve the table and key from the path
 		$table = preg_replace('/[^a-z0-9_]+/i','',array_shift($request));
 		$key = array_shift($request)+0;
@@ -77,8 +80,10 @@ class RESTapiForKorvamato {
 			echo "DELETE-E";
 			$this->pi("DELETE data:");
 			# $this->pa($_DELETE . "<br>\n");
-			$this->pa(json_decode(file_get_contents('php://input')));
+			//$this->pa(json_decode(file_get_contents('php://input')));
+			$this->pa(file_get_contents('php://input'));
 			#$sql = "delete `$table` where id=$key";
+
 			# undelete
 			$sql = "update `$table` set deleted = 0 where rowid=$key";
 			# delete
@@ -124,8 +129,8 @@ class RESTapiForKorvamato {
 			//	echo ($i>0 ? ',' : '').json_encode($result->fetch());
 			//}
 			//if (!$key) echo ']';
-			echo "</table>";
-			echo "</form>";
+			echo "</table>\n";
+			echo "</form>\n";
 			$this->print_html_footer();
 		} elseif ($method == 'POST') {
 			echo "diipa daapa"; //mysqli_insert_id($link);
@@ -144,30 +149,30 @@ class RESTapiForKorvamato {
 	}
 	private function print_table_header() {
 		echo "<table>";
-		echo"<tr><td>ID</td><th>Nick</th><td>Date</td><th>Quote</th>";
-		echo "<td>Info1</td><th>Info2</th><td>Link1</td><th>Link2</th>";
-		echo "<td>DELETE / UNDELETE</td><td>SAVE changes</td><tr>";
+		echo"<tr><th>ID</th><th>Nick</th><th>Date</th><th>Quote</th>";
+		echo "<th>Info1</th><th>Info2</th><th>Link1</th><th>Link2</th>";
+		echo "<th>DELETE / UNDELETE</th><th>SAVE changes</th><tr>";
 	}
 
 	private function print_table_line($arg = null) {
 		if ($arg === null) return;
 		$rowid = $arg['rowid'];
 		echo "\n";
-		echo '<fieldset name="id_'.$rowid.'">'."\n";
+		//echo '<fieldset name="id_'.$rowid.'">'."\n";
 		echo '<tr id="'.$rowid.'"><td>' . $rowid ."</td>";
-		echo "<th>" . $arg['NICK'] ."</th>";
+		echo "<td>" . $arg['NICK'] ."</td>";
 		echo "<td>" . date('j.m.Y H:i:s', $arg['PVM']) ."</td>";
-		echo '<th><textarea name="quote" rows="3" cols="50">' . $arg['QUOTE'] ."</textarea></th>";
-		echo "<td>" . $arg['INFO1'] ."</td>";
-		echo "<th>" . $arg['INFO2'] ."</th>";
+		echo '<td><textarea name="quote">' . $arg['QUOTE'] ."</textarea></td>";
+		echo '<td><textarea name="info1" class="small">' . $arg['INFO1'] ."</textarea></td>";
+		echo '<td><textarea name="info2" class="small">' . $arg['INFO2'] ."</textarea></td>";
 		echo '<td><input type="url" name="link1" value="' . $arg['LINK1'] .'"></td>';
-		echo '<th><input type="url" name="link2" value="' . $arg['LINK2'] .'"></th>';
+		echo '<td><input type="url" name="link2" value="' . $arg['LINK2'] .'"></td>';
 		$delvalue = ($arg['DELETED'] == "1") ? "Undelete" : "Delete";
 		//echo '<td><a href="'.$rowid.'">'.$delvalue.'</a></td>';
 		//echo '<td><input type="submit" name="action" value="DELETE"></td>';
 		echo '<td><input type="button" name="method" id="delete'.$rowid.'" value="'.$delvalue.'" onclick="javaz('.$rowid.','.$delvalue.');"></td>';
 		echo '<td><input type="submit" name="action" id="save'.$rowid.'" value="SAVE"></td></tr>';
-		echo "\n</fieldset>";
+		//echo "\n</fieldset>";
 		echo "\n";
 	}
 
@@ -199,7 +204,7 @@ class RESTapiForKorvamato {
 	}
 
 	private function print_html_header() {
-		echo "<html><head>\n<title>Korvamadot</title>\n";
+		echo "<!DOCTYPE html>\n<head>\n<title>Korvamadot</title>\n";
 		$this->print_css();
 		//echo '<script type="text/javascript" src="/scripts.js"></script>';
 		echo "</head>\n<body>\n";
@@ -207,14 +212,19 @@ class RESTapiForKorvamato {
 	}
 
 	private function print_html_footer() {
-		echo "</body></html>";
+		echo "</body>\n</html>";
 	}
 	private function print_css() {
 		echo "<style>\n";
-		echo "html {font-size: 12px; font-family: Tahoma, Geneva, sans-serif;}\n";
+		echo "html {font-size: 16px; font-family: Tahoma, Geneva, sans-serif;}\n";
 		echo "table {background-color: #999; border: 1px solid black; border-collapse: collapse; }\n";
-		echo "td {margin: 0.2rem;}\n";
-		echo "th {margin: 0.2rem; background-color: #AAA;}\n";
+		echo "textarea {width: 30rem; height:3rem; background-color: #181818; color: white; border: none; font-weight: bold; font-size: 1rem;}\n";
+		echo "textarea.small {width: 20rem; height:2rem; }\n";
+		echo "input[type=url] { background-color: #181818; color: white; border: none; padding: 0.3rem;}\n";
+		echo "input[type=submit], input[type=button] {background-color: #181818; color: white;
+		border: 0px solid black; border-radius: 0.3rem; padding: 0.5rem}\n";
+		echo "td {margin: 0.2rem; padding: 0.3rem;}\n";
+		echo "th {margin: 0.2rem; background-color: #CCC;}\n";
 		echo "tr {border: 2px solid black;}\n";
 		echo "fieldset {margin: 0; padding: 0; border: 0px solid black;}\n";
 		echo "</style>\n";

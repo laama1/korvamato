@@ -42,7 +42,7 @@ class korvamatodb extends SQLite3 {
         echo "<br>\n";
     }
 
-
+    # create new database for our project
     private function createDB () {
         $this->pi("Creating Database for Korvamato");
 
@@ -68,6 +68,7 @@ class korvamatodb extends SQLite3 {
         return $ret;
     }
 
+    # insert line into Database
     public function insertIntoDB($sqlString = null) {
         if ($sqlString === null) return -1;
         $this->pi("insertIntoDB sqlString: " .$sqlString);
@@ -92,7 +93,6 @@ class korvamatodb extends SQLite3 {
         $this->db = null;
         return -2;
     }
-
 
 	public function getResultsFromDBQuery($querystr = null) {
 		if ($querystr === null) return -1;
