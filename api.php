@@ -6,7 +6,7 @@ class RESTapiForKorvamato {
 // LICENSE: BSD
 
 	protected $db;
-	protected $DEBUG = 0;
+	protected $DEBUG = 1;
 
 	public function __construct() {
 		require_once('db.php');
@@ -27,20 +27,20 @@ class RESTapiForKorvamato {
 
 
 		$this->pi("input (json decoded):");
-		$this->pa($input);
+		var_dump($input);
 		$this->pi("input (not decoded):");
-		$this->pa($input2);
+		var_dump($input2);
 
 		$this->pi("request:");
-		$this->pa($request);
+		var_dump($request);
 
 		$this->pi("method: $method");
 
-	
 		// retrieve the table and key from the path
 		$table = preg_replace('/[^a-z0-9_]+/i','',array_shift($request));
 		$key = array_shift($request)+0;
 		$this->pi("key: $key, table: $table");
+		
 		// escape the columns and values from the input object
 		$columns = 0;
 		$values = null;
@@ -48,7 +48,8 @@ class RESTapiForKorvamato {
 			$columns = preg_replace('/[^a-z0-9_]+/i','',array_keys($input));
 			$values = array_map(function ($value) use ($link) {
 				if ($value===null) return null;
-				return sqlite_escape_string($link,(string)$value);
+				//return mysqli_escape_string($link,(string)$value);
+				return (string)$value;
 			}, array_values($input));
 		}
 		
@@ -106,15 +107,16 @@ class RESTapiForKorvamato {
 			die("kaputt");
 		} else {
 			$this->pi("Yes results.");
+			$this->pa($result);
 			// print results, insert id or affected row count
-			$this->pi("Row count: ".$result->rowCount());
+			//$this->pi("Row count: ".$result->rowCount());
 		}
 		
 		if ($method == 'GET') {
 			$this->pi("Method: GET");
 			//if (!$key) echo '[';
 			$this->print_html_header();
-			$this->print_js_code();
+			//$this->print_js_code();
 			//echo '<form method="post" id="'.$table.'">';
 			echo '<p id="debug1"></p>';
 			echo '<p id="debug2"></p>';
@@ -158,6 +160,7 @@ class RESTapiForKorvamato {
 		echo '<a href="hide_deleted">Hide deleted</a> ';
 		echo '<a href="hide_oldest">Hide oldest</a>';
 	}
+
 	private function print_table_header() {
 		echo "<table>";
 		echo"<tr><th>ID</th><th>Nick</th><th>Date</th><th>Artist</th><th>Title</th><th>Quote/Lyrics</th>";
@@ -177,7 +180,7 @@ class RESTapiForKorvamato {
 		echo '<td><input id="new_url" type="url" name="link1" value=""></td>';
 		echo '<td><input id="new_link2" type="url" name="link2" value=""></td>';
 		echo '<td>(_*_)</td>';
-		echo '<td><input type="button" name="action" id="addnew" value="SAVE" onclick="addNew();"></td></tr>';
+		echo '<td><input type="button" name="action" id="addnew" value="SAVE" onclick="addNew(\'new\');"></td></tr>';
 		//$delvalue = ($arg['DELETED'] == "1") ? "UNDELETE" : "DELETE";
 		//echo '<td><a href="'.$rowid.'">'.$delvalue.'</a></td>';
 		//echo '<td><input type="submit" name="action" value="DELETE"></td>';
@@ -211,107 +214,11 @@ class RESTapiForKorvamato {
 		echo "\n";
 	}
 
-	private function print_js_code() {
-		echo'<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<script>
-		"use strict";
-		function deleteItem(butid, deleted) {
-			var delval = (deleted == "UNDELETE") ? 0 : 1;
-			alert("Delete " + butid + " button clicked! Deleted: " + delval);
-			$.ajax({
-    			type: "DELETE",
-    			url: "korvamadot/" + butid,
-    			data: "{rowid: butid, deleted: delval}",
-				dataType: "json",
-				contentType: "application/json; charset=utf-8",
-    			success: function(msg) {
-        			alert("Results: " + msg);
-    			},
-				error: function(msg) {
-					alert("Error: " + msg);
-				}
-			});
-  			return true;
-		}
-
-		function postItem(butid) {
-			alert("Post " + butid + " pressed!");
-			$.ajax({
-    			type: "POST",
-    			url: "korvamadot/" + butid,
-    			data: "{rowid: butid, deleted: delval}",
-				dataType: "json",
-				contentType: "application/json; charset=utf-8",
-    			success: function(msg) {
-        			alert("Results: " + msg);
-    			},
-				error: function(msg) {
-					alert("Error: " + msg);
-				}
-			});	
-		}
-		function parseForm(rowid) {
-			var artist,title,quote,url,link2,info1,info2;
-			artist = document.getElementById(rowid+"_artist").value;
-			title = document.getElementById(rowid+"_title").value;
-			quote = document.getElementById(rowid+"_quote").value;
-			url = document.getElementById(rowid+"_url").value;
-			link2 = document.getElementById(rowid+"_link2").value;
-			info1 = document.getElementById(rowid+"_info1").value;
-			info2 = document.getElementById(rowid+"_info2").value;
-			document.getElementById("debug1").innerHTML = (document.getElementById(rowid+"_row"));
-			<!--print_r(document.getElementById(rowid+"_row"));-->
-			alert("Artist: " + artist + ", Title: " + title + 
-			", Quote: " + quote + ", URL: " + url + ", Link2: " + link2 +
-			", Info1: " + info1 + ", Info2: " + info2);
-       		$.ajax({
-         		type: "PATCH",
-				url: rowid,
-         		data: "{}",
-				dataType: "json",
-				contentType: "application/json; charset=utf-8",
-    			success: function(msg) {
-        			alert("Results: " + msg);
-    			},
-				error: function(msg) {
-					alert("Error: " + msg);
-				}
-       		});
-     	}
-
-		function updateLine(butid) {
-			alert("Update " + butid + " pressed!");
-		}
-		function print_r(printthis, returnoutput) {
-			var output = "";
-
-			if($.isArray(printthis) || typeof(printthis) == "object") {
-				for(var i in printthis) {
-					output += i + " : " + print_r(printthis[i], true) + "\n";
-				}
-			} else {
-				output += printthis;
-			}
-			if(returnoutput && returnoutput == true) {
-				return output;
-			} else {
-				alert(output);
-			}
-		}
-		$(document).ready(function() {
-    		$("th").click(function() {
-        		<!--$(this).hide();-->
-			});
-		});
-
-	</script>
-';
-	}
-
 	private function print_html_header() {
 		echo "<!DOCTYPE html>\n<head>\n<title>Korvamadot</title>\n";
 		echo '<link rel="stylesheet" type="text/css" href="/styles.css">'."\n";
-		//echo '<script type="text/javascript" src="/scripts.js"></script>';
+		echo '<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>';
+		echo '<script type="text/javascript" src="/scripts.js"></script>';
 		echo "</head>\n<body>\n";
 
 	}

@@ -70,7 +70,7 @@ class korvamatodb extends SQLite3 {
 
     # insert line into Database
     public function insertIntoDB($sqlString = null) {
-        if ($sqlString === null) return -1;
+        if ($sqlString === null) return false;
         $this->pi("insertIntoDB sqlString: " .$sqlString);
         try {
 			$this->db = new PDO("sqlite:$this->dbpath");
@@ -91,7 +91,7 @@ class korvamatodb extends SQLite3 {
             $this->pe("insertIntoDB Exception: ".$e);
         }
         $this->db = null;
-        return -2;
+        return false;
     }
 
 	public function getResultsFromDBQuery($querystr = null) {

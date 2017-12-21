@@ -38,7 +38,7 @@ function addNew(butid) {
 	$.ajax({
 		type: "POST",
 		url: "korvamadot/0",
-		data: "{'nick' : '" + nick + "', 'quote' : '"+quote+"', 'info1' : '"+info1+"', 'info2' : '"+info2+"', 'channel' : 'www', 'artist' : '"+artist+"', 'title' : '"+title+"', 'link1' : '"+url+"', 'link2' : '"+link2+"'}",
+		data: '{"nick" : "' + nick + '", "quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "channel" : "www", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
 		dataType: "json",
 		contentType: "application/json; charset=utf-8",
 		done: function(msg) {
@@ -68,7 +68,7 @@ function parseForm(rowid) {
 	", Info1: " + info1 + ", Info2: " + info2);
 	$.ajax({
 		type: "PATCH",
-		url: rowid,
+		url: "korvamadot/"+rowid,
 		data: "{}",
 		dataType: "json",
 		contentType: "application/json; charset=utf-8",
