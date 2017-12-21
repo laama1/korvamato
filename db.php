@@ -9,7 +9,7 @@
 class korvamatodb extends SQLite3 {
     protected $dbpath = "korvamadot.db";
     protected $db;
-    protected $DEBUG = 0;
+    protected $DEBUG = 1;
 
     public function __construct($arg = null) {
         if (!file_exists($this->dbpath)) {
@@ -19,7 +19,7 @@ class korvamatodb extends SQLite3 {
                 echo "Error creating database.<br>";
             }
         } else {
-            $this->pi("SQLite table exist.");
+            //$this->pi("SQLite table exist.");
         }
     }
 
@@ -116,7 +116,7 @@ class korvamatodb extends SQLite3 {
 	}
 
     public function getResultHandle($query = null) {
-        if ($query === null) return -1;
+        if ($query === null) return false;
         $this->pi("getResultHandle, query: $query");
         $this->db = new PDO("sqlite:$this->dbpath");
 		try {
@@ -135,7 +135,7 @@ class korvamatodb extends SQLite3 {
 			$this->pe("getResultHandle Exception: ".$e);
         }
         $this->db = null;
-		return -2;
+		return false;
     }
 
 }

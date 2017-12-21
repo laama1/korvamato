@@ -20,21 +20,20 @@ class RESTapiForKorvamato {
 		$method = $_SERVER['REQUEST_METHOD'];
 		$request = explode('/', trim($_SERVER['PATH_INFO'], '/'));
 		$input = json_decode(file_get_contents('php://input'),true);
-		$input2 = json_decode(file_get_contents('php://input'),true);
+		$input2 = file_get_contents('php://input');
 
-		$this->pi("server path info:");
-		$this->pi($_SERVER['PATH_INFO']);
+		//$this->pi("server path info:");
+		//$this->pi($_SERVER['PATH_INFO']);
 
 
 		$this->pi("input (json decoded):");
 		$this->pa($input);
-		$this->pi("input2 (json decoded):");
+		$this->pi("input (not decoded):");
 		$this->pa($input2);
 
 		$this->pi("request:");
-		$this->pa(json_encode($request));
-		$this->pi("POST json encoded:");
-		$this->pa(json_encode($_POST) . "<br>\n");
+		$this->pa($request);
+
 		$this->pi("method: $method");
 
 	
@@ -73,6 +72,8 @@ class RESTapiForKorvamato {
 			$result = $this->db->insertIntoDB($sql);
 			break;
 		case 'POST':
+			$this->pi("POST (not encoded):");
+			$this->pa($_POST);
 			$sql = "insert into `$table` set $set";
 			$result = $this->db->insertIntoDB($sql);
 			break;
@@ -90,10 +91,15 @@ class RESTapiForKorvamato {
 			$sql = "update `$table` set deleted = 1 where rowid=$key";
 			$result = $this->db->getResultHandle($sql);
 			break;
+		case 'PATCH':
+			echo "PATCH!!!";
+			$this->pa(file_get_contents('php://input'));
+			return;
+			break;
 		}
 		
 		// die if SQL statement failed
-		if (!$result || $result < 0) {
+		if (!$result) {
 			http_response_code(404);
 			// die(mysqli_error());
 			$this->pi("No results.");
@@ -109,9 +115,12 @@ class RESTapiForKorvamato {
 			//if (!$key) echo '[';
 			$this->print_html_header();
 			$this->print_js_code();
-			echo '<form method="post" id="'.$table.'">';
+			//echo '<form method="post" id="'.$table.'">';
+			echo '<p id="debug1"></p>';
+			echo '<p id="debug2"></p>';
 			$this->print_filters();
 			$this->print_table_header();
+			$this->add_line_row();
 
 			$i = 0;
 			$line;
@@ -130,12 +139,14 @@ class RESTapiForKorvamato {
 			//}
 			//if (!$key) echo ']';
 			echo "</table>\n";
-			echo "</form>\n";
+			//echo "</form>\n";
 			$this->print_html_footer();
 		} elseif ($method == 'POST') {
-			echo "diipa daapa"; //mysqli_insert_id($link);
-		} else {
-			echo "tsajaiajajajai"; //sqlite_affected_rows($link);
+			echo "POST OK";
+		} elseif ($method == 'DELETE') {
+			echo "DELETE OK";
+		} elseif ($method == 'PATCH') {
+			echo "PATCH OK";
 		}
 		
 		// close sql connection
@@ -149,9 +160,31 @@ class RESTapiForKorvamato {
 	}
 	private function print_table_header() {
 		echo "<table>";
-		echo"<tr><th>ID</th><th>Nick</th><th>Date</th><th>Quote</th>";
+		echo"<tr><th>ID</th><th>Nick</th><th>Date</th><th>Artist</th><th>Title</th><th>Quote/Lyrics</th>";
 		echo "<th>Info1</th><th>Info2</th><th>Link1</th><th>Link2</th>";
 		echo "<th>DELETE / UNDELETE</th><th>SAVE changes</th><tr>";
+	}
+
+	private function add_line_row($arg = null) {
+		echo '<tr id="new_row"><td>(_*_)</td>';
+		echo '<td><input id="new_nick" type="text" name="nick" value=""></td>';
+		echo '<td><p id="new_date"></p></td>';
+		echo '<td><input id="new_artist" type="text" name="artist" value=""></td>';
+		echo '<td><input id="new_title" type="text" name="title" value=""></td>';
+		echo '<td><textarea id="new_quote" name="quote"></textarea></td>';
+		echo '<td><textarea id="new_info1" name="info1" class="small"></textarea></td>';
+		echo '<td><textarea id="new_info2" name="info2" class="small"></textarea></td>';
+		echo '<td><input id="new_url" type="url" name="link1" value=""></td>';
+		echo '<td><input id="new_link2" type="url" name="link2" value=""></td>';
+		echo '<td>(_*_)</td>';
+		echo '<td><input type="button" name="action" id="addnew" value="SAVE" onclick="addNew();"></td></tr>';
+		//$delvalue = ($arg['DELETED'] == "1") ? "UNDELETE" : "DELETE";
+		//echo '<td><a href="'.$rowid.'">'.$delvalue.'</a></td>';
+		//echo '<td><input type="submit" name="action" value="DELETE"></td>';
+		//echo '<td><input type="button" name="method" id="delete'.$rowid.'" value="'.$delvalue.'" onclick="deleteitem('.$rowid.',\''.$delvalue.'\');"></td>';
+		//echo '<td><input type="button" name="action" id="update'.$rowid.'" value="UPDATE" onclick="parseForm('.$rowid.');"></td></tr>';
+		//echo "\n</fieldset>";
+		echo "\n";
 	}
 
 	private function print_table_line($arg = null) {
@@ -159,19 +192,21 @@ class RESTapiForKorvamato {
 		$rowid = $arg['rowid'];
 		echo "\n";
 		//echo '<fieldset name="id_'.$rowid.'">'."\n";
-		echo '<tr id="'.$rowid.'"><td>' . $rowid ."</td>";
-		echo "<td>" . $arg['NICK'] ."</td>";
-		echo "<td>" . date('j.m.Y H:i:s', $arg['PVM']) ."</td>";
-		echo '<td><textarea name="quote">' . $arg['QUOTE'] ."</textarea></td>";
-		echo '<td><textarea name="info1" class="small">' . $arg['INFO1'] ."</textarea></td>";
-		echo '<td><textarea name="info2" class="small">' . $arg['INFO2'] ."</textarea></td>";
-		echo '<td><input type="url" name="link1" value="' . $arg['LINK1'] .'"></td>';
-		echo '<td><input type="url" name="link2" value="' . $arg['LINK2'] .'"></td>';
-		$delvalue = ($arg['DELETED'] == "1") ? "Undelete" : "Delete";
+		echo '<tr id="'.$rowid.'_row"><td>' . $rowid ."</td>";
+		echo '<td><p id="'.$rowid.'_nick">' . $arg['NICK'] ."</p></td>";
+		echo '<td><p id="'.$rowid.'_date">' . date('j.m.Y H:i:s', $arg['PVM']) ."</p></td>";
+		echo '<td><input id="'.$rowid.'_artist" type="text" name="artist" value="'.$arg['ARTIST'].'"></td>';
+		echo '<td><input id="'.$rowid.'_title" type="text" name="title" value="'.$arg['TITLE'].'"></td>';
+		echo '<td><textarea id="'.$rowid.'_quote" name="quote">' . $arg['QUOTE'] ."</textarea></td>";
+		echo '<td><textarea id="'.$rowid.'_info1" name="info1" class="small">' . $arg['INFO1'] ."</textarea></td>";
+		echo '<td><textarea id="'.$rowid.'_info2" name="info2" class="small">' . $arg['INFO2'] ."</textarea></td>";
+		echo '<td><input id="'.$rowid.'_url" type="url" name="link1" value="' . $arg['LINK1'] .'"></td>';
+		echo '<td><input id="'.$rowid.'_link2" type="url" name="link2" value="' . $arg['LINK2'] .'"></td>';
+		$delvalue = ($arg['DELETED'] == "1") ? "UNDELETE" : "DELETE";
 		//echo '<td><a href="'.$rowid.'">'.$delvalue.'</a></td>';
 		//echo '<td><input type="submit" name="action" value="DELETE"></td>';
-		echo '<td><input type="button" name="method" id="delete'.$rowid.'" value="'.$delvalue.'" onclick="javaz('.$rowid.','.$delvalue.');"></td>';
-		echo '<td><input type="submit" name="action" id="save'.$rowid.'" value="SAVE"></td></tr>';
+		echo '<td><input type="button" name="method" id="delete'.$rowid.'" value="'.$delvalue.'" onclick="deleteItem('.$rowid.',\''.$delvalue.'\');"></td>';
+		echo '<td><input type="button" name="action" id="update'.$rowid.'" value="UPDATE" onclick="parseForm('.$rowid.');"></td></tr>';
 		//echo "\n</fieldset>";
 		echo "\n";
 	}
@@ -179,21 +214,91 @@ class RESTapiForKorvamato {
 	private function print_js_code() {
 		echo'<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script>
-		function javaz(butid, deleted) {
-			alert("Delete " + butid + " button clicked! Delete: " + deleted);
+		"use strict";
+		function deleteItem(butid, deleted) {
+			var delval = (deleted == "UNDELETE") ? 0 : 1;
+			alert("Delete " + butid + " button clicked! Deleted: " + delval);
 			$.ajax({
     			type: "DELETE",
-    			url: butid,
+    			url: "korvamadot/" + butid,
     			data: "{rowid: butid, deleted: delval}",
-				contentType: "application/json",
+				dataType: "json",
+				contentType: "application/json; charset=utf-8",
     			success: function(msg) {
         			alert("Results: " + msg);
-    			}
+    			},
+				error: function(msg) {
+					alert("Error: " + msg);
+				}
 			});
   			return true;
 		}
 
-		$(document).ready(function() {$id on t
+		function postItem(butid) {
+			alert("Post " + butid + " pressed!");
+			$.ajax({
+    			type: "POST",
+    			url: "korvamadot/" + butid,
+    			data: "{rowid: butid, deleted: delval}",
+				dataType: "json",
+				contentType: "application/json; charset=utf-8",
+    			success: function(msg) {
+        			alert("Results: " + msg);
+    			},
+				error: function(msg) {
+					alert("Error: " + msg);
+				}
+			});	
+		}
+		function parseForm(rowid) {
+			var artist,title,quote,url,link2,info1,info2;
+			artist = document.getElementById(rowid+"_artist").value;
+			title = document.getElementById(rowid+"_title").value;
+			quote = document.getElementById(rowid+"_quote").value;
+			url = document.getElementById(rowid+"_url").value;
+			link2 = document.getElementById(rowid+"_link2").value;
+			info1 = document.getElementById(rowid+"_info1").value;
+			info2 = document.getElementById(rowid+"_info2").value;
+			document.getElementById("debug1").innerHTML = (document.getElementById(rowid+"_row"));
+			<!--print_r(document.getElementById(rowid+"_row"));-->
+			alert("Artist: " + artist + ", Title: " + title + 
+			", Quote: " + quote + ", URL: " + url + ", Link2: " + link2 +
+			", Info1: " + info1 + ", Info2: " + info2);
+       		$.ajax({
+         		type: "PATCH",
+				url: rowid,
+         		data: "{}",
+				dataType: "json",
+				contentType: "application/json; charset=utf-8",
+    			success: function(msg) {
+        			alert("Results: " + msg);
+    			},
+				error: function(msg) {
+					alert("Error: " + msg);
+				}
+       		});
+     	}
+
+		function updateLine(butid) {
+			alert("Update " + butid + " pressed!");
+		}
+		function print_r(printthis, returnoutput) {
+			var output = "";
+
+			if($.isArray(printthis) || typeof(printthis) == "object") {
+				for(var i in printthis) {
+					output += i + " : " + print_r(printthis[i], true) + "\n";
+				}
+			} else {
+				output += printthis;
+			}
+			if(returnoutput && returnoutput == true) {
+				return output;
+			} else {
+				alert(output);
+			}
+		}
+		$(document).ready(function() {
     		$("th").click(function() {
         		<!--$(this).hide();-->
 			});
@@ -205,7 +310,7 @@ class RESTapiForKorvamato {
 
 	private function print_html_header() {
 		echo "<!DOCTYPE html>\n<head>\n<title>Korvamadot</title>\n";
-		$this->print_css();
+		echo '<link rel="stylesheet" type="text/css" href="/styles.css">'."\n";
 		//echo '<script type="text/javascript" src="/scripts.js"></script>';
 		echo "</head>\n<body>\n";
 
@@ -213,21 +318,6 @@ class RESTapiForKorvamato {
 
 	private function print_html_footer() {
 		echo "</body>\n</html>";
-	}
-	private function print_css() {
-		echo "<style>\n";
-		echo "html {font-size: 16px; font-family: Tahoma, Geneva, sans-serif;}\n";
-		echo "table {background-color: #999; border: 1px solid black; border-collapse: collapse; }\n";
-		echo "textarea {width: 30rem; height:3rem; background-color: #181818; color: white; border: none; font-weight: bold; font-size: 1rem;}\n";
-		echo "textarea.small {width: 20rem; height:2rem; }\n";
-		echo "input[type=url] { background-color: #181818; color: white; border: none; padding: 0.3rem;}\n";
-		echo "input[type=submit], input[type=button] {background-color: #181818; color: white;
-		border: 0px solid black; border-radius: 0.3rem; padding: 0.5rem}\n";
-		echo "td {margin: 0.2rem; padding: 0.3rem;}\n";
-		echo "th {margin: 0.2rem; background-color: #CCC;}\n";
-		echo "tr {border: 2px solid black;}\n";
-		echo "fieldset {margin: 0; padding: 0; border: 0px solid black;}\n";
-		echo "</style>\n";
 	}
 
     # print errors
