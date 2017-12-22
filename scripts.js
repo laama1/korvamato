@@ -5,7 +5,7 @@ function deleteItem(butid, deleted) {
 	$.ajax({
 		type: "DELETE",
 		url: "korvamadot/" + butid,
-		data: "{rowid: butid, deleted: delval}",
+		data: '{"rowid" : butid, "deleted" : "delval"}',
 		dataType: "json",
 		contentType: "application/json; charset=utf-8",
 		done: function(msg) {
@@ -69,7 +69,7 @@ function parseForm(rowid) {
 	$.ajax({
 		type: "PATCH",
 		url: "korvamadot/"+rowid,
-		data: "{}",
+		data: '{"quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
 		dataType: "json",
 		contentType: "application/json; charset=utf-8",
 		done: function(msg) {
