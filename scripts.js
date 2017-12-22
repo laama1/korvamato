@@ -1,4 +1,10 @@
+// korvamato scripts.js -file
+// (C) LAama1 22.12.2017
+// LICENSE: BSD
+
 "use strict";
+
+// Delete item
 function deleteItem(butid, deleted) {
 	var delval = (deleted == "UNDELETE") ? 0 : 1;
 	alert("Delete " + butid + " button clicked! Deleted: " + delval);
@@ -19,7 +25,7 @@ function deleteItem(butid, deleted) {
 	});
 	return true;
 }
-
+// add new item
 function addNew(butid) {
 	
 	var nick,artist,title,quote,url,link2,info1,info2;
@@ -52,6 +58,7 @@ function addNew(butid) {
 	});	
 }
 
+// Update item
 function parseForm(rowid) {
 	var artist,title,quote,url,link2,info1,info2;
 	artist = document.getElementById(rowid+"_artist").value;
@@ -84,6 +91,7 @@ function parseForm(rowid) {
 }
 
 function updateLine(butid) {
+	// update line in the UI view table
 	alert("Update " + butid + " pressed!");
 }
 function print_r(printthis, returnoutput) {

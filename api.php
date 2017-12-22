@@ -45,6 +45,11 @@ class RESTapiForKorvamato {
 		$columns = 0;
 		$values = null;
 		if ($input) {
+			$this->pi("array keys:");
+			$this->pa(array_keys($input));
+			$this->pi("array values:");
+			$this->pa(array_values($input));
+
 			$columns = preg_replace('/[^a-z0-9_]+/i','',array_keys($input));
 			$values = array_map(function ($value) use ($link) {
 				if ($value===null) return null;
@@ -55,11 +60,17 @@ class RESTapiForKorvamato {
 		
 		// build the SET part of the SQL command
 		$set = '';
+		$set1 = '';
+		$set2 = '';
 		if ($values) {
+			// tested for POST only
 			for ($i=0; $i < count($columns); $i++) {
-				$set.=($i>0 ? ',' : '').'`'.$columns[$i].'`=';
-				$set.=($values[$i]===null ? 'NULL':'"'.$values[$i].'"');
+				$set1 .= ($i>0 ? ',' : '').'`'.$columns[$i].'`';
+				#$set2.=($values[$i]===null ? 'NULL':'"'.$values[$i].'"');
+				$set2 .= ($i>0 ? ',' : '');
+				$set2 .= $values[$i]===null ? 'NULL':'"'.$values[$i].'"';
 			}
+			$set = '('.$set1 . ') VALUES (' . $set2.')';
 		}
 		
 		// create SQL based on HTTP method
@@ -73,9 +84,9 @@ class RESTapiForKorvamato {
 			$result = $this->db->insertIntoDB($sql);
 			break;
 		case 'POST':
-			$this->pi("POST (not encoded):");
+			$this->pi("POST (not decoded):");
 			$this->pa($_POST);
-			$sql = "insert into `$table` set $set";
+			$sql = "insert into `$table` $set";
 			$result = $this->db->insertIntoDB($sql);
 			break;
 		case 'DELETE':
