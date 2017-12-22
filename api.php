@@ -71,6 +71,7 @@ class RESTapiForKorvamato {
 				$set2 .= $values[$i]===null ? 'NULL':'"'.$values[$i].'"';
 			}
 			$set = '('.$set1 . ') VALUES (' . $set2.')';
+			$this->pi("SQL SET part: $set");
 		}
 		
 		// create SQL based on HTTP method
@@ -106,7 +107,23 @@ class RESTapiForKorvamato {
 		case 'PATCH':
 			echo "PATCH!!!";
 			$this->pa(file_get_contents('php://input'));
-			return;
+
+			if ($values) {
+				// 
+				for ($i=0; $i < count($columns); $i++) {
+					$set1 .= ($i>0 ? ',' : '').'`'.$columns[$i].'` = ';
+					$set1.=($values[$i]===null ? 'NULL':'"'.$values[$i].'"');
+					#$set2 .= ($i>0 ? ',' : '');
+					#$set2 .= $values[$i]===null ? 'NULL':'"'.$values[$i].'"';
+				}
+				$set = '('.$set1 . ') VALUES (' . $set2.')';
+				$this->pi("SQL SET part: $set");
+			}
+
+
+			$sql = "update `$table` set $set where rowid=$key";
+			$result = $this->db->getResultHandle($sql);
+			//return;
 			break;
 		}
 		
