@@ -20,11 +20,7 @@ class RESTapiForKorvamato {
 		$method = $_SERVER['REQUEST_METHOD'];
 		$request = explode('/', trim($_SERVER['PATH_INFO'], '/'));
 		$input = json_decode(file_get_contents('php://input'),true);
-		$input2 = file_get_contents('php://input');
-
-		//$this->pi("server path info:");
-		//$this->pi($_SERVER['PATH_INFO']);
-
+		// $input2 = file_get_contents('php://input');
 
 		$this->pi("input (json decoded):");
 		var_dump($input);
@@ -60,17 +56,13 @@ class RESTapiForKorvamato {
 		
 		// build the SET part of the SQL command
 		$set = '';
-		$set1 = '';
-		$set2 = '';
 		if ($values) {
 			// tested for POST only
 			for ($i=0; $i < count($columns); $i++) {
-				$set1 .= ($i>0 ? ',' : '').'`'.$columns[$i].'`';
-				#$set2.=($values[$i]===null ? 'NULL':'"'.$values[$i].'"');
-				$set2 .= ($i>0 ? ',' : '');
-				$set2 .= $values[$i]===null ? 'NULL':'"'.$values[$i].'"';
+				$set .= ($i>0 ? ', ' : '').'`'.$columns[$i].'` = ';
+				$set.=($values[$i]===null ? 'NULL':'"'.$values[$i].'"');
 			}
-			$set = '('.$set1 . ') VALUES (' . $set2.')';
+			#$set = '('.$set1 . ') VALUES (' . $set2.')';
 			$this->pi("SQL SET part: $set");
 		}
 		
@@ -105,20 +97,9 @@ class RESTapiForKorvamato {
 			$result = $this->db->getResultHandle($sql);
 			break;
 		case 'PATCH':
-			echo "PATCH!!!";
-			$this->pa(file_get_contents('php://input'));
+			#echo "PATCH!!!";
+			#$this->pa(file_get_contents('php://input'));
 
-			if ($values) {
-				// 
-				for ($i=0; $i < count($columns); $i++) {
-					$set1 .= ($i>0 ? ',' : '').'`'.$columns[$i].'` = ';
-					$set1.=($values[$i]===null ? 'NULL':'"'.$values[$i].'"');
-					#$set2 .= ($i>0 ? ',' : '');
-					#$set2 .= $values[$i]===null ? 'NULL':'"'.$values[$i].'"';
-				}
-				$set = '('.$set1 . ') VALUES (' . $set2.')';
-				$this->pi("SQL SET part: $set");
-			}
 
 
 			$sql = "update `$table` set $set where rowid=$key";
@@ -155,19 +136,12 @@ class RESTapiForKorvamato {
 			$i = 0;
 			$line;
 			do {
-				//echo($i>0 ? ',' : ''.json_encode($line));
-				//echo($i>0 ? ',' : ''.json_encode($line));
 				$this->print_table_line($line);
 				$i++;
 				//print_r($line);
 				//echo "<br>";
 			} while ($line = $result->fetch());
 
-
-			//for ($i=0; $i < $result->rowCount(); $i++) {
-			//	echo ($i>0 ? ',' : '').json_encode($result->fetch());
-			//}
-			//if (!$key) echo ']';
 			echo "</table>\n";
 			//echo "</form>\n";
 			$this->print_html_footer();
