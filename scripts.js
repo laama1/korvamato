@@ -14,11 +14,11 @@ function deleteItem(butid, deleted) {
 		data: '{"rowid" : butid, "deleted" : "delval"}',
 		dataType: "json",
 		contentType: "application/json; charset=utf-8",
-		done: function(msg) {
+		success: function(msg) {
 			document.getElementById("debug1").innerHTML = msg;
 			alert("Results: " + msg);
 		},
-		fail: function(msg) {
+		error: function(msg) {
 			document.getElementById("debug1").innerHTML = msg;
 			alert("Error: " + msg);
 		}
@@ -47,15 +47,14 @@ function addNew(butid) {
 		data: '{"nick" : "' + nick + '", "quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "channel" : "www", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
 		dataType: "json",
 		contentType: "application/json; charset=utf-8",
-		done: function(msg) {
+		success: function(msg) {
 			document.getElementById("debug1").innerHTML = msg;
 			alert("Results: " + msg);
-		},
-		fail: function(msg) {
-			document.getElementById("debug1").innerHTML = msg;
-			alert("Error: " + msg);
 		}
-	});	
+	}).fail(function (jqXHR, textStatus, error) {
+		document.getElementById("debug1").innerHTML = msg;
+		alert("Error: " + jqXHR.responseText);
+	});
 }
 
 // Update item
@@ -79,11 +78,11 @@ function parseForm(rowid) {
 		data: '{"quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
 		dataType: "json",
 		contentType: "application/json; charset=utf-8",
-		done: function(msg) {
+		success: function(msg) {
 			document.getElementById("debug1").innerHTML = msg;
 			alert("Results: " + msg);
 		},
-		fail: function(msg) {
+		error: function(msg) {
 			document.getElementById("debug1").innerHTML = msg;
 			alert("Error: " + msg);
 		}
