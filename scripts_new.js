@@ -16,12 +16,12 @@ function deleteItem2(butid, deleted) {
 		contentType: "application/json; charset=utf-8",
 		success: function(msg) {
 			document.getElementById("debug1").innerHTML = msg;
-			console.log("deleteItem Results: " + msg);
+			console.log("deleteItem Results: %o" + msg);
 			updateLine(msg);
 		},
-		error: function(msg) {
-			document.getElementById("debug1").innerHTML = msg;
-			console.log("deleteItem Error: " + msg);
+		error: function(msg, textStatus, error) {
+			document.getElementById("debug1").innerHTML = msg.responseText;
+			console.log("deleteItem Error: %o", msg);
 		}
 	});
 	return true;

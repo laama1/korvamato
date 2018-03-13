@@ -7,6 +7,7 @@ input[type=url], input[type=text] {
 	color: white;
 	border: none;
 	padding: 0.3rem;
+	margin: 0.3rem;
 }
 input[type=submit], input[type=button] {
 	background-color: #181818;
@@ -15,7 +16,23 @@ input[type=submit], input[type=button] {
 	border-radius: 0.3rem;
 	padding: 0.5rem 1rem;
 }
-td {margin: 0.2rem; padding: 0.3rem;}
+td {
+	margin: 0.2rem;
+	padding: 0.3rem;
+}
 th {margin: 0.2rem; background-color: #CCC;}
 tr {border: 2px solid black;}
 fieldset {margin: 0; padding: 0; border: 0px solid black;}
+#debug1 {
+	background-color: rgb(246, 183, 183);
+	margin: 0.2rem;
+}
+#debug2 {
+	background-color: rgb(194, 118, 118);
+	margin: 0.2rem;
+}
+
+.blink {
+    background: #2a5b84;
+    transition: background 1.0s ease-in-out;
+}
