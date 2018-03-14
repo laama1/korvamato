@@ -6,7 +6,7 @@ class RESTapiForKorvamato {
 // LICENSE: BSD
 
 	protected $db;
-	protected $DEBUG = 1;
+	protected $DEBUG = 0;
 
 	public function __construct() {
 		require_once('db.php');
@@ -22,27 +22,18 @@ class RESTapiForKorvamato {
 		$request = explode('/', trim($pinf, '/'));
 		$input = json_decode(file_get_contents('php://input'),true);
 		$result = false;
-		//$input2 = file_get_contents('php://input');
-		if ($this->DEBUG == 3) {
-			$this->db->pi("path info: ".$pinf);
+
+		if ($this->DEBUG == 1) {
+			//$this->db->pi("path info: ".$pinf);
 			$this->db->pi("method: $method");
 			//var_dump($method);
 			$this->db->pi("input (json decoded):");
 			var_dump($input);
 			echo "<br>";
-			$this->db->pi("input values print_r:");
-			print_r($input);
-			echo "<br>";
-			echo "<br><br>";
-			//$this->db->pi("input2 (not decoded):");
-			//var_dump($input2);
-			//echo "<br><br>";
 
 			$this->db->pi("request:");
 			var_dump($request);
 			echo "<br><br>";
-
-			//$this->db->pi("method: $method");
 		}
 		
 
@@ -71,18 +62,22 @@ class RESTapiForKorvamato {
 		}
 		
 		// build the SET part of the SQL command
-		$set = '';
+		$seto = '';
+		$set1 = '';
+		$set2 = '';
 		if ($values) {
 			// tested for POST only
 			for ($i=0; $i < count($columns); $i++) {
-				$set .= ($i>0 ? ', ' : '').'`'.$columns[$i].'` = ';
-				//$set .= ($i>0 ? ', ' : '').$columns[$i].' = ';
-				// $set.=($values[$i]===null ? 'NULL':'"'.$values[$i].'"');
-				//$set.=($values[$i]==null ? "''":'?'); // bind later
-				$set.=($values[$i]==null ? "?":'?'); // bind later
+				$seto .= ($i>0 ? ', ' : '').'`'.$columns[$i].'` = ';
+				$set1 .= ($i>0 ? ', ' : '').$columns[$i];
+				//$set2 .=($values[$i]===null ? 'NULL':'"'.$values[$i].'"');
+				$set2 .=($i>0 ? ', ' : '').($values[$i]===null ? "''":'?');
+				//$seto.=($values[$i]==null ? "''":'?'); // bind later
+				$seto.=($values[$i]==null ? "?":'?'); // bind later
 			}
-			// $set = '('.$set1 . ') VALUES (' . $set2.')';
-			$this->db->pi("SQL SET part: $set");
+			$sett = '('.$set1.') VALUES ('.$set2.')';
+			$this->db->pi("SQL SET part: $sett");
+			$this->db->pi("SQL SETO part: $seto");
 		}
 		
 		// create SQL based on HTTP method
@@ -112,19 +107,25 @@ class RESTapiForKorvamato {
 			break;
 		case 'PUT':
 			//$sql = "update `$table` set $set where rowid=$key";
-			$sql = "update $table set $set where rowid = $key";
+			$sql = "update $table set $seto where rowid = $key";
 			$result = $this->db->insertIntoDB($sql);
-			if ($result !== false) return $key;
+			if ($result !== false) {
+				echo $key;
+				return $key;
+			}
 			//return false;
 			break;
 		case 'POST':
 			$this->db->pa($_POST, "POST (not decoded)");
 			//$sql = "insert into `$table` $set";
-			$sql = "insert into $table set $set";
+			$sql = "insert into $table $sett";
 			//$this->db->pi("POST SQL: $sql");
 			//$result = $this->db->insertIntoDB($sql);
 			$result = $this->db->bindSQL($sql, $values);
-			if ($result !== false) return $key;
+			if ($result !== false) {
+				echo $key;
+				return $key;
+			}
 			//return false;
 			break;
 		case 'DELETE':
@@ -135,15 +136,23 @@ class RESTapiForKorvamato {
 			$sql2 = "update $table set deleted = ? where rowid = ?";
 			$params2 = array($deleted, $key);
 			$result = $this->db->bindSQL($sql2, $params2);
-			if ($result !== false) return $key;
+			if ($result !== false) {
+				$this->db->pi("dodi, coolness!");
+				echo $key;
+				return $key;
+			}
 			//return false;
 			break;
 		case 'PATCH':
 			#$this->pi("PATCH REQUEST");
-			$sql = "update $table set $set where rowid = $key";
+			$sql = "update $table set $seto where rowid = $key";
 			$this->db->pi("PATCH!!! $sql");
 			$result = $this->db->bindSQL($sql, $values);
-			if ($result !== false) return $key;
+			if ($result !== false) {
+				$this->db->pi("dodi, coolness2!");
+				echo $key;
+				return $key;
+			}
 			//return false;
 			break;
 		}
@@ -165,8 +174,8 @@ class RESTapiForKorvamato {
 
 
 	private function print_filters() {
-		echo '<a href="hide_deleted">Hide deleted</a> ';
-		echo '<a href="hide_oldest">Hide oldest</a>';
+		echo '<a href="hide_deleted&">Hide deleted</a> ';
+		echo '<a href="hide_oldest&">Hide oldest</a>';
 	}
 
 	private function print_table_header() {
@@ -177,7 +186,7 @@ class RESTapiForKorvamato {
 	}
 
 	private function add_line_row($arg = null) {
-		echo '<tr id="new_row"><td>(_*_)</td>';
+		echo '<tr id="0_row"><td>(_*_)</td>';
 		echo '<td><input id="new_nick" type="text" name="nick" size="15" maxlength="100" value=""></td>';
 		echo '<td><p id="new_date"></p></td>';
 		echo '<td><input id="new_artist" type="text" name="artist" value=""></td>';
@@ -216,7 +225,7 @@ class RESTapiForKorvamato {
 		$delvalue = ($arg['DELETED'] == "1") ? "UNDELETE" : "DELETE";
 		//echo '<td><a href="'.$rowid.'">'.$delvalue.'</a></td>';
 		//echo '<td><input type="submit" name="action" value="DELETE"></td>';
-		echo '<td><input type="button" name="method" id="delete'.$rowid.'" value="'.$delvalue.'" onclick="deleteItem2('.$rowid.',\''.$delvalue.'\');"></td>';
+		echo '<td><input type="button" name="method" id="delete'.$rowid.'" value="'.$delvalue.'" onclick="deleteItem('.$rowid.',\''.$delvalue.'\');"></td>';
 		echo '<td><input type="button" name="action" id="update'.$rowid.'" value="UPDATE" onclick="parseForm('.$rowid.');"></td></tr>';
 		//echo "\n</fieldset>";
 		echo "\n";

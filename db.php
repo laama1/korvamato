@@ -10,7 +10,7 @@ class korvamatodb /*extends SQLite3*/ {
 	//protected $dbpath = '../../.irssi/scripts/korvamadot.db';
 	protected $dbpath;
 	protected $db;
-	protected $DEBUG = 1;
+	protected $DEBUG = 0;
 	protected $date;
 
 	public function __construct($arg = null) {
@@ -125,7 +125,7 @@ class korvamatodb /*extends SQLite3*/ {
 			if ($pdostmt = $this->db->prepare($query)) {
 				//$this->pa($pdostmt, "bindSQL pdostmt");
 				if ($result = $pdostmt->execute($params)) {
-					//$this->pa($pdostmt, "bindSQL Result from query");
+					$this->pa($result, "bindSQL Result from query");
 					return $result;
 				}
 				$this->pe("bindSQL DB execute erroor.");
@@ -134,7 +134,7 @@ class korvamatodb /*extends SQLite3*/ {
 			$this->pe("bindSQL DB prepare Erröör.");
 			return false;
 		} catch(PDOException $e) {
-			$this->pe("bindSQL PDOException: ".$e);
+			$this->pe("bindSQL ".$e);
 		} catch(Exception $e) {
 			$this->pe("bindSQL Exception: ".$e);
 		}

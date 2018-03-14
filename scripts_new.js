@@ -5,24 +5,30 @@
 "use strict";
 
 // Delete item
-function deleteItem2(butid, deleted) {
+function deleteItem(butid, deleted) {
 	var delval = (deleted == "UNDELETE") ? 0 : 1;
 	console.log("Delete " + butid + " button clicked! Deleted: " + delval);
 	$.ajax({
 		type: "DELETE",
 		url: "korvamadot/" + butid,
 		data: '{"rowid" : '+butid+', "deleted" : '+delval+'}',
-		dataType: "json",
+		//dataType: "json",
 		contentType: "application/json; charset=utf-8",
 		success: function(msg) {
-			document.getElementById("debug1").innerHTML = msg;
-			console.log("deleteItem Results: %o" + msg);
-			updateLine(msg);
+			//document.getElementById("debug1").innerHTML = msg;
+			console.log("deleteItem success Results: %o", msg);
+			if (delval == 1) updateLine(msg, 'red');
+			else if (delval == 0) updateLine(msg, 'lightred');
+			updateButton(msg);
 		},
 		error: function(msg, textStatus, error) {
 			document.getElementById("debug1").innerHTML = msg.responseText;
 			console.log("deleteItem Error: %o", msg);
 		}
+	}).fail(function (jqXHR, textStatus, error) {
+		document.getElementById("debug2").innerHTML = jqXHR.responseText;
+		console.log("Error: " + jqXHR.responseText + ", textStatus "+textStatus+", error: "+error);
+		console.log(jqXHR);
 	});
 	return true;
 }
@@ -39,20 +45,23 @@ function addNew(butid) {
 	link2 = document.getElementById("new_link2").value;
 	info1 = document.getElementById("new_info1").value;
 	info2 = document.getElementById("new_info2").value;
-	console.log("Add new line, Nick: " + nick + ", Artist: " + artist + ", Title: " + title + 
-	", Quote: " + quote + ", URL: " + url + ", Link2: " + link2 +
-	", Info1: " + info1 + ", Info2: " + info2+ ", POST next..");
+	//console.log("Add new line, Nick: " + nick + ", Artist: " + artist + ", Title: " + title + 
+	//", Quote: " + quote + ", URL: " + url + ", Link2: " + link2 +
+	//", Info1: " + info1 + ", Info2: " + info2+ ", POST next..");
 
 	$.ajax({
 		type: "POST",
 		url: "korvamadot/0",
 		data: '{"nick" : "' + nick + '", "quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "channel" : "www", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
-		dataType: "json",
+		//dataType: "json",
 		contentType: "application/json; charset=utf-8",
 		success: function(msg) {
 			document.getElementById("debug1").innerHTML = msg;
-			console.log("addNew Results: " + msg);
-			updateLine(msg);
+			console.log("addNew Results: %o", msg);
+			updateLine(0, 'green');
+			setTimeout(function() {
+				window.location.reload(true); 
+			}, 2000);
 		},
 		error: function(msg, textStatus, error) {
 			document.getElementById("debug2").innerHTML = msg.responseText;
@@ -81,37 +90,47 @@ function parseForm(rowid) {
 	document.getElementById("debug1").innerHTML = (document.getElementById(rowid+"_row"));
 	//print_r(document.getElementById(rowid+"_row"));
 	console.log("Parse form Artist: " + artist + ", Title: " + title + ", Quote: " + quote + ", URL: " + url + ", Link2: " + link2 +", Info1: " + info1 + ", Info2: " + info2+ ", PATCH request next.\n");
-	
+	console.log("rowid: "+rowid);
 	$.ajax({
 		type: "PATCH",
 		url: "korvamadot/"+rowid,
 		data: '{"quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
-		dataType: "json",
+		//dataType: "json",
 		contentType: "application/json; charset=utf-8",
 		//contentType: "application/json",
 		success: function(msg) {
 			document.getElementById("debug1").innerHTML = msg;
-			console.log("Success: " + msg);
-			updateLine(msg);
+			console.log("parseForm Success: " + msg);
+			updateLine(msg, 'yellow');
 		},
 		error: function(msg, textStatus, error) {
-			document.getElementById("debug2").innerHTML = msg.responseText;
-			console.log("error objecti %o <<<", msg);
+			//document.getElementById("debug2").innerHTML = msg.responseText;
+			console.log("parseForm error objecti %o <<<", msg);
 			console.log(textStatus);
-			//console.log(error);
+			console.log(msg.responseText);
 			console.log("faLe.");
 		}
 	}).fail(function (jqXHR, textStatus, error) {
 		document.getElementById("debug2").innerHTML = jqXHR.responseText;
-		console.log("Error: " + jqXHR.responseText + ", textStatus "+textStatus+", error: "+error);
+		console.log("parseForm Error: " + jqXHR.responseText + ", textStatus "+textStatus+", error: "+error);
 		console.log(jqXHR);
 	});
 }
 
-function updateLine(butid) {
+function updateLine(butid, color) {
 	// update line in the UI view table
-	console.log("######  Update " + butid + " pressed!");
-	blinkRow(butid);
+	console.log("######  Update >" + butid + "< pressed! Color: "+color);
+	blinkRow(butid, color);
+}
+
+function updateButton(butid) {
+	var oldval = document.getElementById("delete"+butid).value;
+	var newval = 'UNDELETE';
+	//alert("oldval: "+oldval);
+	if (oldval == "UNDELETE") {
+		newval = 'DELETE';
+	}
+	document.getElementById("delete"+butid).value = newval;
 }
 
 function print_r(printthis, returnoutput) {
@@ -131,17 +150,24 @@ function print_r(printthis, returnoutput) {
 	}
 }
 
-function blinkRow(elementid) {
+function blinkRow(elementid, color) {
+	console.log("blinkRow param: "+elementid+ ", color: "+color);
+	var count = 0;
+	var elem = '#'+elementid+'_row';
+	$(elem).toggleClass("blink");
 	setTimeout(function() {
 		var interval = setInterval(function () {
-			$(elementid+'_row').toggleClass(function() {
+			console.log("inside2 count: "+count);
+			$(elem).toggleClass(function() {
+				console.log("inside3");
 				count++;
-				return "blink";
+				return "blink"+color;
 			})
-		if ($count == 2) clearInterval(interval);
+			//count++;
+			if (count > 2) clearInterval(interval);
 		
-		}, 600)
-	},1000);
+		}, 400)
+	},100);
 }
 
 $(document).ready(function() {
