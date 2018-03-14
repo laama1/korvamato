@@ -12,7 +12,7 @@ function deleteItem(butid, deleted) {
 		type: "DELETE",
 		url: "korvamadot/" + butid,
 		data: '{"rowid" : '+butid+', "deleted" : '+delval+'}',
-		//dataType: "json",
+		dataType: "json",
 		contentType: "application/json; charset=utf-8",
 		success: function(msg) {
 			//document.getElementById("debug1").innerHTML = msg;
@@ -53,7 +53,7 @@ function addNew(butid) {
 		type: "POST",
 		url: "korvamadot/0",
 		data: '{"nick" : "' + nick + '", "quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "channel" : "www", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
-		//dataType: "json",
+		dataType: "json",
 		contentType: "application/json; charset=utf-8",
 		success: function(msg) {
 			document.getElementById("debug1").innerHTML = msg;
@@ -95,7 +95,7 @@ function parseForm(rowid) {
 		type: "PATCH",
 		url: "korvamadot/"+rowid,
 		data: '{"quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
-		//dataType: "json",
+		dataType: "json",
 		contentType: "application/json; charset=utf-8",
 		//contentType: "application/json",
 		success: function(msg) {
@@ -126,7 +126,6 @@ function updateLine(butid, color) {
 function updateButton(butid) {
 	var oldval = document.getElementById("delete"+butid).value;
 	var newval = 'UNDELETE';
-	//alert("oldval: "+oldval);
 	if (oldval == "UNDELETE") {
 		newval = 'DELETE';
 	}
@@ -150,11 +149,15 @@ function print_r(printthis, returnoutput) {
 	}
 }
 
+function blinkHideRow(elementid) {
+
+}
+
 function blinkRow(elementid, color) {
 	console.log("blinkRow param: "+elementid+ ", color: "+color);
 	var count = 0;
 	var elem = '#'+elementid+'_row';
-	$(elem).toggleClass("blink");
+	$(elem).toggleClass("curtains");
 	setTimeout(function() {
 		var interval = setInterval(function () {
 			console.log("inside2 count: "+count);
@@ -164,7 +167,13 @@ function blinkRow(elementid, color) {
 				return "blink"+color;
 			})
 			//count++;
-			if (count > 2) clearInterval(interval);
+			if (count > 2) {
+				clearInterval(interval);
+				if (color == 'red') {
+					//$(elem).slideToggle("slow");
+					$(elem).toggleClass("curtains");
+				}
+			}
 		
 		}, 400)
 	},100);

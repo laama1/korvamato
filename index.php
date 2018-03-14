@@ -110,7 +110,7 @@ class RESTapiForKorvamato {
 			$sql = "update $table set $seto where rowid = $key";
 			$result = $this->db->insertIntoDB($sql);
 			if ($result !== false) {
-				echo $key;
+				echo json_encode(array($key));
 				return $key;
 			}
 			//return false;
@@ -123,7 +123,7 @@ class RESTapiForKorvamato {
 			//$result = $this->db->insertIntoDB($sql);
 			$result = $this->db->bindSQL($sql, $values);
 			if ($result !== false) {
-				echo $key;
+				echo json_encode(array($key));
 				return $key;
 			}
 			//return false;
@@ -138,8 +138,8 @@ class RESTapiForKorvamato {
 			$result = $this->db->bindSQL($sql2, $params2);
 			if ($result !== false) {
 				$this->db->pi("dodi, coolness!");
-				echo $key;
-				return $key;
+				echo json_encode(array($key));
+				return json_encode(array($key));
 			}
 			//return false;
 			break;
@@ -150,8 +150,8 @@ class RESTapiForKorvamato {
 			$result = $this->db->bindSQL($sql, $values);
 			if ($result !== false) {
 				$this->db->pi("dodi, coolness2!");
-				echo $key;
-				return $key;
+				echo json_encode(array($key));
+				return json_encode(array($key));
 			}
 			//return false;
 			break;
