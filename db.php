@@ -7,6 +7,36 @@
 
 
 class korvamatodb /*extends SQLite3*/ {
+	protected $dbpath = 'korvamadot.db';	// 14.3.2018: test database..
+	protected $table = '';
+	//protected $dbpath;
+	protected $db;
+	protected $DEBUG = 0;
+	protected $date;
+	protected $debuglines = array();
+
+	public function __construct($arg = null) {
+		if ($arg != null) {
+			$this->dbpath = $arg.'.db';
+		}
+		$this->date = date("H:i:s");
+		$this->db = new PDO("sqlite:$this->dbpath");
+		$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	}
+
+	/**
+	 * TODO: return false on fail.
+	 */
+	private function createDBConnection() {
+		$this->db = null;
+		$this->db = new PDO("sqlite:$this->dbpath");
+		$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		return true;
+	}
+
+	public function printMessages() {
+		print_r($this->debuglines);
+=======
 	//protected $dbpath = '../../.irssi/scripts/korvamadot.db';
 	protected $dbpath;
 	protected $db;
@@ -39,6 +69,7 @@ class korvamatodb /*extends SQLite3*/ {
 	public function pi($arg = null) {
 		if ($arg == null || $this->DEBUG != 1) return;
 		echo "[INFO $this->date] ".$arg ."<br><br>\n";
+		$this->debuglines[] = "[INFO $this->date] ".$arg ."<br><br>\n";
 	}
 
 	# debug print ARRAY
@@ -47,6 +78,7 @@ class korvamatodb /*extends SQLite3*/ {
 		echo "[ARRAY $this->date $title] ";
 		print_r($arg);
 		echo "<br><br>\n";
+		$this->debuglines[] = "[ARRAY $this->date $title] ".print_r($arg, true)."<br><br>\n";
 	}
 
 	# create new database for our project
@@ -119,7 +151,6 @@ class korvamatodb /*extends SQLite3*/ {
 	public function bindSQL($query = false, $params = false) {
 		if ($query == false || $params == false) return false;
 		$this->pi("bindSQL query: $query");
-		//$this->pa($this->db, "bindSQL this->db");
 		$this->pa($params, "bindSQL params");
 		try {
 			if ($pdostmt = $this->db->prepare($query)) {
@@ -162,6 +193,30 @@ class korvamatodb /*extends SQLite3*/ {
 			$this->pe("getResultHandle Exception: ".$e);
 		}
 		$this->pe("getResultHandle error..");
+		return false;
+	}
+
+	public function setDB($name = false) {
+		if ($name === false) return false;
+		$this->dbpath = $name.'.db';
+		return $this->createDBConnection();
+	}
+
+	private function setTable($name = false) {
+		if ($name === false) return false;
+		// Sanity check
+		if (preg_match("/^[a-zA-Z0-9_]*$/", $name)) {
+			$this->table = $name;
+		} else {
+			return false;
+		}
+	}
+
+	public function getMethod($string = false) {
+		$sql = "SELECT rowid,* from $this->table";
+	}
+
+
 		//$this->db = null;
 		return false;
 	}
