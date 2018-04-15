@@ -51,17 +51,11 @@ class RESTapiForKorvamato {
 		$key = array_shift($request);
 		//$this->db->pi("key number: $key, table name: $table");
 
-		$key = intval(array_shift($request)+0);
-		$this->db->pi("key number: $key, table name: $table");
-		
 		// escape the columns and values from the input object
 		$columns = 0;
 		$values = null;
 		if ($input) {
-
-			$columns = preg_replace('/[^a-z0-9_]+/i','',array_keys($input));
-			$values = array_values($input);	// TODO: sanitize or bind later
-			$this->db->pa($input, "input array");
+			//$this->db->pa($input, "input array");
 			//$this->pi("array values:");
 			//$this->pa(array_values($input));
 
@@ -81,11 +75,7 @@ class RESTapiForKorvamato {
 				$seto .= ($i>0 ? ', ' : '').'`'.$columns[$i].'` = ';
 				$set1 .= ($i>0 ? ', ' : '').$columns[$i];
 				//$set2 .=($values[$i]===null ? 'NULL':'"'.$values[$i].'"');
-
 				$set2 .=($i>0 ? ', ' : '').($values[$i]===null ? '?':'?');
-				$seto.=($values[$i]==null ? "''":'?'); // bind later
-
-				$set2 .=($i>0 ? ', ' : '').($values[$i]===null ? "''":'?');
 				//$seto.=($values[$i]==null ? "''":'?'); // bind later
 				$seto.=($values[$i]==null ? "?":'?'); // bind later
 			}
@@ -98,7 +88,7 @@ class RESTapiForKorvamato {
 		switch ($method) {
 		case 'GET':
 			// Get all from DB if $key not set
-			$sql = "select rowid,* from $table".($key ? " WHERE rowid = $key" : ''). " ORDER BY rowid desc LIMIT 100;";
+			$sql = "select rowid,* from $table".($key ? " WHERE rowid = $key" : ''). " ORDER BY rowid asc LIMIT 100;";
 			if ($key == 'latest') {
 				$sql = "select rowid,* from $table order by rowid desc limit 1";
 			}
@@ -109,39 +99,9 @@ class RESTapiForKorvamato {
 			break;
 		case 'PUT':
 		case 'PATCH':
-			$sql = "update $table set $seto where rowid = $key";
-			$result = $this->db->bindSQL($sql, $values);
-			break;
-		case 'POST':
-			$this->db->pa($_POST, "POST (not decoded)");
-			$sql = "insert into $table $sett";
-			$result = $this->db->bindSQL($sql, $values);
-			//$sql = "select rowid,* from `$table`".($key ? " WHERE rowid=$key" : '');
-			$sql = "select rowid,* from $table".($key ? " WHERE rowid = $key" : ''). " ORDER BY rowid desc";
-			$result = $this->db->getResultHandle($sql);
-			$this->db->pa($result, "GET result..");
-			$this->print_html_header();
-
-			$this->print_filters();
-			$this->print_table_header();
-			$this->add_line_row();
-			$i = 0;
-			$line;
-
-			while ($line = $result->fetch()) {
-				//if (!isset($line)) echo "line not set! i: $i ";
-				$this->print_table_line($line);
-				$i++;
-				//$this->db->pi("index: $i");
-			} 
-
-			echo "</table>\n";
-			$this->print_html_footer();
-			break;
-		case 'PUT':
 			//$sql = "update `$table` set $set where rowid=$key";
 			$sql = "update $table set $seto where rowid = $key";
-			$result = $this->db->insertIntoDB($sql);
+			$result = $this->db->bindSQL($sql, $values);
 			if ($result !== false) {
 				echo json_encode(array($key));
 				return $key;
@@ -165,9 +125,6 @@ class RESTapiForKorvamato {
 			$this->db->pi("DELETE data..");
 
 			$deleted = isset($input['deleted']) ? intval($input['deleted']) : 0;	// 0 = default, not deleted
-			$sql2 = "update $table set deleted = ? where rowid = ?";
-			$params2 = array($deleted, $key);
-			$result = $this->db->bindSQL($sql2, $params2);
 			//$sql = "update `$table` set deleted = $deleted where rowid = $key";
 			$sql2 = "update $table set deleted = ? where rowid = ?";
 			$params2 = array($deleted, $key);
@@ -179,6 +136,7 @@ class RESTapiForKorvamato {
 			}
 			//return false;
 			break;
+		/*	
 		case 'PATCH':
 			#$this->pi("PATCH REQUEST");
 			$sql = "update $table set $seto where rowid = $key";
@@ -191,6 +149,7 @@ class RESTapiForKorvamato {
 			}
 			//return false;
 			break;
+		*/
 		default:
 			echo json_encode(array("nutinbits"));
 			return false;
@@ -205,13 +164,9 @@ class RESTapiForKorvamato {
 		} else {
 			echo json_encode(array($key));
 		}
-		$this->db->disco();
 		http_response_code(200);
 		
 	}
-
-		
-	//}
 
 
 	private function print_filters() {
@@ -221,7 +176,7 @@ class RESTapiForKorvamato {
 
 	private function print_table_header() {
 		echo "<table>";
-		echo"<tr><th>ID</th><th>Nick</th><th>Date</th><th>Artist</th><th>Title</th><th>Quote/Lyrics</th>";
+		echo"<tr><th>ID</th><th>Nick</th><th>Date<br><small>(last edited)</small></th><th>Artist</th><th>Title</th><th>Quote/Lyrics</th>";
 		echo "<th>Info1</th><th>Info2</th><th>Link1</th><th>Link2</th>";
 		echo "<th>DELETE / UNDELETE</th><th>SAVE changes</th><tr>";
 	}
@@ -239,21 +194,16 @@ class RESTapiForKorvamato {
 		echo '<td><input id="new_link2" type="url" name="link2" value=""></td>';
 		echo '<td>(_*_)</td>';
 		echo '<td><input type="button" name="action" id="addnew" value="SAVE" onclick="addNew(\'new\');"></td></tr>';
-		//$delvalue = ($arg['DELETED'] == "1") ? "UNDELETE" : "DELETE";
-		//echo '<td><a href="'.$rowid.'">'.$delvalue.'</a></td>';
-		//echo '<td><input type="submit" name="action" value="DELETE"></td>';
-		//echo '<td><input type="button" name="method" id="delete'.$rowid.'" value="'.$delvalue.'" onclick="deleteitem('.$rowid.',\''.$delvalue.'\');"></td>';
-		//echo '<td><input type="button" name="action" id="update'.$rowid.'" value="UPDATE" onclick="parseForm('.$rowid.');"></td></tr>';
-		//echo "\n</fieldset>";
 		echo "\n";
 	}
 
 	private function print_table_line($arg = null) {
 		if ($arg === null) return;
 		$rowid = $arg['rowid'];
+		$class = $arg['DELETED'] == '1' ? 'deleted' : 'undeleted';
 		echo "\n";
 		//echo '<fieldset name="id_'.$rowid.'">'."\n";
-		echo '<tr id="'.$rowid.'_row"><td>' . $rowid ."</td>";
+		echo '<tr id="'.$rowid.'_row" class="'.$class.'"><td>' . $rowid ."</td>";
 		echo '<td><p id="'.$rowid.'_nick">' . $arg['NICK'] ."</p></td>";
 		echo '<td><p id="'.$rowid.'_date">' . date('j.m.Y H:i:s', $arg['PVM']) ."</p></td>";
 		echo '<td><input id="'.$rowid.'_artist" type="text" name="artist" value="'.$arg['ARTIST'].'"></td>';

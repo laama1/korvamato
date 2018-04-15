@@ -36,33 +36,13 @@ class korvamatodb /*extends SQLite3*/ {
 
 	public function printMessages() {
 		print_r($this->debuglines);
-=======
-	//protected $dbpath = '../../.irssi/scripts/korvamadot.db';
-	protected $dbpath;
-	protected $db;
-	protected $DEBUG = 0;
-	protected $date;
-
-	public function __construct($arg = null) {
-		$this->dbpath = dirname(__FILE__).'/korvamadot.db';
-		if (!file_exists($this->dbpath)) {
-			if ($this->createDB()) {
-				echo "Database created.<br>";
-			} else {
-				echo "Error creating database.<br>";
-			}
-		} else {
-			//$this->pi("SQLite table exist.");
-		}
-		$this->db = new PDO("sqlite:$this->dbpath");
-		$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-		$this->date = date("H:i:s");
 	}
 
 	# print errors
 	public function pe($arg = null) {
 		if ($arg == null || $this->DEBUG != 1) return;
 		echo "[ERROR $this->date] ".$arg . "<br><br>\n";
+		$this->debuglines[] = "[ERROR $this->date] ".$arg . "<br><br>\n";
 	}
 
 	# print info
@@ -100,12 +80,12 @@ class korvamatodb /*extends SQLite3*/ {
 	public function disco() {
 		$this->db = null;
 	}
+
 	# insert line into Database
 	public function insertIntoDB($sqlString = null) {
 		if ($sqlString === null) return false;
 		$this->pi("insertIntoDB sqlString: " .$sqlString);
 		try {
-			//$this->db = new PDO("sqlite:$this->dbpath");
 			if ($pdostmt = $this->db->prepare($sqlString)) {
 				if ($pdostmt->execute()) {
 					$this->db = null;
@@ -214,11 +194,6 @@ class korvamatodb /*extends SQLite3*/ {
 
 	public function getMethod($string = false) {
 		$sql = "SELECT rowid,* from $this->table";
-	}
-
-
-		//$this->db = null;
-		return false;
 	}
 
 }

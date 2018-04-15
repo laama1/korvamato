@@ -6,7 +6,7 @@
 
 // Delete item
 function deleteItem(butid, deleted) {
-	var delval = (deleted == "UNDELETE") ? 0 : 1;
+	var delval = (deleted == "DELETE") ? 1 : 0;
 	console.log("Delete " + butid + " button clicked! Deleted: " + delval);
 	$.ajax({
 		type: "DELETE",
@@ -27,7 +27,7 @@ function deleteItem(butid, deleted) {
 		}
 	}).fail(function (jqXHR, textStatus, error) {
 		document.getElementById("debug2").innerHTML = jqXHR.responseText;
-		console.log("Error: " + jqXHR.responseText + ", textStatus "+textStatus+", error: "+error);
+		console.log("deleteItem Error: " + jqXHR.responseText + ", textStatus "+textStatus+", error: "+error);
 		console.log(jqXHR);
 	});
 	return true;
@@ -36,7 +36,7 @@ function deleteItem(butid, deleted) {
 // add new item
 function addNew(butid) {
 	
-	var nick,artist,title,quote,url,link2,info1,info2;
+	var nick,artist,title,quote,url,link2,info1,info2, ledit;
 	nick = document.getElementById("new_nick").value;
 	artist = document.getElementById("new_artist").value;
 	title = document.getElementById("new_title").value;
@@ -45,6 +45,12 @@ function addNew(butid) {
 	link2 = document.getElementById("new_link2").value;
 	info1 = document.getElementById("new_info1").value;
 	info2 = document.getElementById("new_info2").value;
+	//ledit = Date.time();
+	//ledit = this.getTime()/1000|0;
+	//ledit = Date.now().getUnixTime();
+	var date = new Date();
+	ledit = date.toISOString();
+	console.log("ledit: "+ledit);
 	//console.log("Add new line, Nick: " + nick + ", Artist: " + artist + ", Title: " + title + 
 	//", Quote: " + quote + ", URL: " + url + ", Link2: " + link2 +
 	//", Info1: " + info1 + ", Info2: " + info2+ ", POST next..");
@@ -52,6 +58,7 @@ function addNew(butid) {
 	$.ajax({
 		type: "POST",
 		url: "korvamadot/0",
+		//data: '{"nick" : "' + nick + '", "quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "channel" : "www", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '", "lastedit" : ' +ledit+'}',
 		data: '{"nick" : "' + nick + '", "quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "channel" : "www", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
 		dataType: "json",
 		contentType: "application/json; charset=utf-8",
@@ -60,7 +67,7 @@ function addNew(butid) {
 			console.log("addNew Results: %o", msg);
 			updateLine(0, 'green');
 			setTimeout(function() {
-				window.location.reload(true); 
+				window.location.reload(true);
 			}, 2000);
 		},
 		error: function(msg, textStatus, error) {
@@ -72,7 +79,7 @@ function addNew(butid) {
 		}
 	}).fail(function (jqXHR, textStatus, error) {
 		document.getElementById("debug2").innerHTML = jqXHR.responseText;
-		console.log("Error: " + jqXHR.responseText + ", textStatus "+textStatus+", error: "+error);
+		console.log("addNew Error: " + jqXHR.responseText + ", textStatus "+textStatus+", error: "+error);
 		console.log(jqXHR);
 	});
 }
@@ -87,12 +94,13 @@ function parseForm(rowid) {
 	link2 = document.getElementById(rowid+"_link2").value;
 	info1 = document.getElementById(rowid+"_info1").value;
 	info2 = document.getElementById(rowid+"_info2").value;
-	document.getElementById("debug1").innerHTML = (document.getElementById(rowid+"_row"));
+	//document.getElementById("debug1").innerHTML = (document.getElementById(rowid+"_row"));
 	//print_r(document.getElementById(rowid+"_row"));
-	console.log("Parse form Artist: " + artist + ", Title: " + title + ", Quote: " + quote + ", URL: " + url + ", Link2: " + link2 +", Info1: " + info1 + ", Info2: " + info2+ ", PATCH request next.\n");
+	console.log("Parse form Artist: " + artist + ", Title: " + title + ", Quote: " + quote + ", URL: " + url + ", Link2: " + link2 +", Info1: " + info1 + ", Info2: " + info2+ ", PUT request next.\n");
 	console.log("rowid: "+rowid);
 	$.ajax({
-		type: "PATCH",
+		//type: "PATCH",
+		type: "PUT",
 		url: "korvamadot/"+rowid,
 		data: '{"quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
 		dataType: "json",
@@ -106,8 +114,8 @@ function parseForm(rowid) {
 		error: function(msg, textStatus, error) {
 			//document.getElementById("debug2").innerHTML = msg.responseText;
 			console.log("parseForm error objecti %o <<<", msg);
-			console.log(textStatus);
-			console.log(msg.responseText);
+			console.log("parseForm textStatus:" +textStatus);
+			console.log("parseForm msg.responseText: "+msg.responseText);
 			console.log("faLe.");
 		}
 	}).fail(function (jqXHR, textStatus, error) {
@@ -157,26 +165,36 @@ function blinkRow(elementid, color) {
 	console.log("blinkRow param: "+elementid+ ", color: "+color);
 	var count = 0;
 	var elem = '#'+elementid+'_row';
-	$(elem).toggleClass("curtains");
-	setTimeout(function() {
+	var elementt = document.getElementById(elementid+'_row');
+	var oldclass = document.getElementById(elementid+'_row').className;
+	console.log("blinkRow oldclass: "+oldclass);
+	//$(elem).toggleClass("curtains");
+	//setTimeout(function() {
 		var interval = setInterval(function () {
-			console.log("inside2 count: "+count);
-			$(elem).toggleClass(function() {
-				console.log("inside3");
-				count++;
-				return "blink"+color;
-			})
-			//count++;
+			//console.log("inside2 count: "+count);
+			if (count %2 == 1) {
+				//$(elem).className = "blink"+color;
+				document.getElementById(elementid+'_row').className = "blink"+color;
+			
+				console.log("newclass: blink"+color);
+				//count++;
+				//return "blink"+color;
+			} else {
+				//$(elem).className = "blinkred";
+				document.getElementById(elementid+'_row').className = oldclass;
+				console.log("newclass: "+oldclass);
+			}
+			
 			if (count > 2) {
 				clearInterval(interval);
 				if (color == 'red') {
 					//$(elem).slideToggle("slow");
-					$(elem).toggleClass("curtains");
+					 //$(elem).toggleClass("curtains");
 				}
 			}
-		
-		}, 400)
-	},100);
+			count++;
+		}, 300)
+	//},100);
 }
 
 $(document).ready(function() {
