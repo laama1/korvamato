@@ -1,0 +1,58 @@
+html {
+	font-size: 12px;
+}
+body {
+	margin: 0;
+	padding: 0;
+	position: fixed; 
+    overflow-y: scroll;
+	width: 100%;
+	background: black;
+}
+#auroratable {
+	border: 0 solid black;
+	border-collapse: collapse;
+	width: 100%;
+	height: 100%;
+	overflow: none;
+}
+#auroradiv {
+	background: black;
+	width: 100%;
+	height: 100%;
+}
+.hideclass {
+	animation: fadeout 2s 4s forwards ease-out;
+}
+
+.hideclass:hover {
+	animation: fadein 1s 0s forwards ease-in;
+}
+
+#info {
+	position: absolute;
+	top: 0;
+	left: 10rem;
+	background: rgba(255,255,255,0.2);
+}
+
+.tablerow {
+	height: 1rem;
+}
+.center {
+	margin-right: auto;
+	margin-left: auto;
+	text-align: center;
+
+}
+@keyframes fadeout {
+	0% { opacity: 1; }
+	50% { opacity: 0.75; }
+	100% { opacity: 0.2; background: rgba(255,255,255,0);}
+}
+
+@keyframes fadein {
+	0% {opacity: 0.3; }
+	50% { opacity: 0.75; }
+	100% { opacity: 1; }
+  }

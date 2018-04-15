@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>AURORAS demo</title>
+<link rel="stylesheet" type="text/css" href="auroras.css">
+<script src="auroras.js"></script>
+<script type="text/javascript" charset="utf-8" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+<body>
+	<div id="info" class="hideclass">
+		<h1 class="center">AURORAS</h1>
+		<input type="button" id="latest" value="Get latest" onClick="getLatest();"/>
+		<input type="button" id="start" value="Animate random" onClick="timerdemo();"/><br/><br/>
+		<input type="button" id="latest100" value="Get latest 100" onClick="getLinesFromDB();"/><br/><br/>
+	</div>
+	<div id="auroradiv">
+		<table id="auroratable">
+		<tr id="titlerow">
+			<td>Row</td>
+			<td>Latest</td>
+			<td>Forecast 0.5h</td>
+			<td>Time</td>
+			<td>Last update</td>
+		</tr>
+		</table>
+	</div>
+</body>
+</html>
