@@ -40,7 +40,6 @@ class RESTapiForKorvamato {
 		// retrieve the table and key from the path TODO: validate table
 		$table = preg_replace('/[^a-z0-9_]+/i','',array_shift($request));
 		if ($table == '') {
-<<<<<<< HEAD:api.php
 			$this->db->pe("no table given.");
 			$this->printNoTable();
 			return;
@@ -51,11 +50,7 @@ class RESTapiForKorvamato {
 		}
 		$key = array_shift($request);
 		//$this->db->pi("key number: $key, table name: $table");
-=======
-			$this->db->pe("no table: $table.");
-			$this->printNoTable();
-			return;
-		}
+
 		$key = intval(array_shift($request)+0);
 		$this->db->pi("key number: $key, table name: $table");
 		
@@ -121,7 +116,6 @@ class RESTapiForKorvamato {
 			$this->db->pa($_POST, "POST (not decoded)");
 			$sql = "insert into $table $sett";
 			$result = $this->db->bindSQL($sql, $values);
-=======
 			//$sql = "select rowid,* from `$table`".($key ? " WHERE rowid=$key" : '');
 			$sql = "select rowid,* from $table".($key ? " WHERE rowid = $key" : ''). " ORDER BY rowid desc";
 			$result = $this->db->getResultHandle($sql);
@@ -211,21 +205,13 @@ class RESTapiForKorvamato {
 		} else {
 			echo json_encode(array($key));
 		}
+		$this->db->disco();
 		http_response_code(200);
 		
 	}
 
-			// die(mysqli_error());
-			$this->db->pi("No results.");
-			die("kaputt");
-		} else {
-			//$this->db->pa($result, "YES results");
-			// print results, insert id or affected row count
-			//$this->pi("Row count: ".$result->rowCount());
-		}
-
-		$this->db->disco();
-	}
+		
+	//}
 
 
 	private function print_filters() {
