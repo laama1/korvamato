@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>KORVAMADOT demo</title>
+	<link rel="stylesheet" type="text/css" href="korvamadot.css">
+	<script src="korvamadot.js"></script>
+	<script type="text/javascript" charset="utf-8" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+<body>
+	<h1 class="center">Korvamadot</h1>
+	
+	<a href="hide_deleted&">Hide deleted</a>
+	<a href="hide_oldest&">Hide oldest</a>
+
+	<table>
+		<tr>
+			<th>ID</th><th>Nick</th><th>Date<br><small>(last edited)</small></th><th>Artist</th><th>Title</th><th>Quote/Lyrics</th>
+			<th>Info1</th><th>Info2</th><th>Link1</th><th>Link2</th>
+			<th>DELETE / UNDELETE</th><th>SAVE changes</th>
+		<tr>
+		<tr id="0_row">
+			<td>(_*_)</td>
+			<td><input id="new_nick" type="text" name="nick" size="15" maxlength="100" value=""></td>
+			<td><p id="new_date"></p></td>
+			<td><input id="new_artist" type="text" name="artist" value=""></td>
+			<td><input id="new_title" type="text" name="title" value=""></td>
+			<td><textarea id="new_quote" name="quote"></textarea></td>
+			<td><textarea id="new_info1" name="info1" class="small"></textarea></td>
+			<td><textarea id="new_info2" name="info2" class="small"></textarea></td>
+			<td><input id="new_url" type="url" name="link1" value=""></td>
+			<td><input id="new_link2" type="url" name="link2" value=""></td>
+			<td>(_*_)</td>
+			<td><input type="button" name="action" id="addnew" value="SAVE" onclick="addNew('new');"></td>
+		</tr>
+	</table>
+
+</body>
+</html>

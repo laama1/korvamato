@@ -4,14 +4,17 @@ class RESTapiForKorvamato {
 // CREATED: x.y.z
 // Edited: 20.12.2017, 27.2.2018, 13.3.2018
 // LICENSE: BSD
+// Requirements: php-json (debian, fedora)
 
 	protected $db;
-	protected $DEBUG = 0;
+	protected $DEBUG = 1;
+	private $tablename = '';
 
 	public function __construct() {
 		require_once('db.php');
         $this->db = new korvamatodb;
 		$this->getMethod();
+		$this->printTable();
 	}
 	
 	private function getMethod() {
@@ -44,8 +47,9 @@ class RESTapiForKorvamato {
 			$this->printNoTable();
 			return;
 		}
+		$this->tablename = $table;
 		if ($this->db->setDB($table) == false) {
-			echo json_encode(array("DIED"));
+			echo json_encode(array("DIED when setting DB"));
 			die();
 		}
 		$key = array_shift($request);
@@ -151,6 +155,7 @@ class RESTapiForKorvamato {
 			break;
 		*/
 		default:
+			http_response_code(404);
 			echo json_encode(array("nutinbits"));
 			return false;
 		}
@@ -158,7 +163,7 @@ class RESTapiForKorvamato {
 
 		// die if SQL statement failed
 		if (!$result) {
-			http_response_code(404);
+			http_response_code(500);
 			$this->db->pi("No results.");
 			die(json_encode(array("kaputt")));
 		} else {
@@ -168,34 +173,6 @@ class RESTapiForKorvamato {
 		
 	}
 
-
-	private function print_filters() {
-		echo '<a href="hide_deleted&">Hide deleted</a> ';
-		echo '<a href="hide_oldest&">Hide oldest</a>';
-	}
-
-	private function print_table_header() {
-		echo "<table>";
-		echo"<tr><th>ID</th><th>Nick</th><th>Date<br><small>(last edited)</small></th><th>Artist</th><th>Title</th><th>Quote/Lyrics</th>";
-		echo "<th>Info1</th><th>Info2</th><th>Link1</th><th>Link2</th>";
-		echo "<th>DELETE / UNDELETE</th><th>SAVE changes</th><tr>";
-	}
-
-	private function add_line_row($arg = null) {
-		echo '<tr id="0_row"><td>(_*_)</td>';
-		echo '<td><input id="new_nick" type="text" name="nick" size="15" maxlength="100" value=""></td>';
-		echo '<td><p id="new_date"></p></td>';
-		echo '<td><input id="new_artist" type="text" name="artist" value=""></td>';
-		echo '<td><input id="new_title" type="text" name="title" value=""></td>';
-		echo '<td><textarea id="new_quote" name="quote"></textarea></td>';
-		echo '<td><textarea id="new_info1" name="info1" class="small"></textarea></td>';
-		echo '<td><textarea id="new_info2" name="info2" class="small"></textarea></td>';
-		echo '<td><input id="new_url" type="url" name="link1" value=""></td>';
-		echo '<td><input id="new_link2" type="url" name="link2" value=""></td>';
-		echo '<td>(_*_)</td>';
-		echo '<td><input type="button" name="action" id="addnew" value="SAVE" onclick="addNew(\'new\');"></td></tr>';
-		echo "\n";
-	}
 
 	private function print_table_line($arg = null) {
 		if ($arg === null) return;
@@ -219,16 +196,15 @@ class RESTapiForKorvamato {
 		echo '<td><input type="button" name="method" id="delete'.$rowid.'" value="'.$delvalue.'" onclick="deleteItem('.$rowid.',\''.$delvalue.'\');"></td>';
 		echo '<td><input type="button" name="action" id="update'.$rowid.'" value="UPDATE" onclick="parseForm('.$rowid.');"></td></tr>';
 		//echo "\n</fieldset>";
-		echo "\n";
+		echo PHP_EOL;
 	}
 
 	private function print_html_header() {
-		echo "<!DOCTYPE html>\n<head>\n\t<title>Korvamadot</title>\n\t";
-		//echo '<link rel="stylesheet" type="text/css" href="http://lamanzi.vhosti.fi/korvamato/styles.css">'."\n\t";
+		echo "<!DOCTYPE html>\n<head>\n\t<title>What's here?</title>\n\t";
 		echo '<link rel="stylesheet" type="text/css" href="styles.css">'."\n\t";
-		echo '<script type="text/javascript" charset="utf-8" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>'."\n\t";
+		//echo '<script type="text/javascript" charset="utf-8" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>'."\n\t";
 		//echo '<script type="text/javascript" charset="utf-8" src="http://lamanzi.vhosti.fi/korvamato/scripts.js"></script>'."\n";
-		echo '<script type="text/javascript" charset="utf-8" src="scripts_new.js"></script>'."\n";
+		//echo '<script type="text/javascript" charset="utf-8" src="scripts_new.js"></script>'."\n";
 		echo "</head>\n<body>\n";
 		echo '<p id="debug1"></p>';
 		echo '<p id="debug2"></p>';
@@ -239,6 +215,10 @@ class RESTapiForKorvamato {
 		echo '<p id="debug1">No table defined.</p>';
 		echo '<p id="debug2">Try adding "/korvamadot" at the end of url.</p>';
 		$this->print_html_footer();
+		exit;
+	}
+	private function printTable() {
+		include dirname(__FILE__).$this->tablename . '.html';
 	}
 
 	private function print_html_footer() {

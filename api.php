@@ -127,6 +127,11 @@ class RESTapiForKorvamato {
 		
 	}
 
+	private function printNoTable()
+	{
+		echo json_encode(array('No table defined'));
+	}
+
 }
 $testing = new RESTapiforKorvamato;
 ?>
