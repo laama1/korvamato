@@ -84,6 +84,72 @@ function addNew(butid) {
 	});
 }
 
+function addLine(rowid, deleted, arg) {
+	var delclass = deleted == '1' ? 'deleted' : 'undeleted';
+	//echo '<fieldset name="id_'.$rowid.'">'."\n";
+	print '<tr id="' +rowid+ '_row" class="'+delclass+'"><td>' +rowid+ '</td>';
+	echo '<td><p id="'+rowid+'_nick">' +$arg['NICK']+'</p></td>';
+	echo '<td><p id="'+rowid+'_date">' . date('j.m.Y H:i:s', $arg['PVM']) .'</p></td>';
+	echo '<td><input id="'+rowid+'_artist" type="text" name="artist" value="'+$arg['ARTIST']+'"></td>';
+	echo '<td><input id="'+rowid+'_title" type="text" name="title" value="'.$arg['TITLE'].'"></td>';
+	echo '<td><textarea id="'+rowid+'_quote" name="quote">' . $arg['QUOTE'] .'</textarea></td>';
+	echo '<td><textarea id="'+rowid+'_info1" name="info1" class="small">' . $arg['INFO1'] .'</textarea></td>';
+	echo '<td><textarea id="'+rowid+'_info2" name="info2" class="small">' . $arg['INFO2'] .'</textarea></td>';
+	echo '<td><input id="'+rowid+'_url" type="url" name="link1" value="' . $arg['LINK1'] .'"></td>';
+	echo '<td><input id="'+rowid+'_link2" type="url" name="link2" value="' . $arg['LINK2'] .'"></td>';
+	$delvalue = ($arg['DELETED'] == "1") ? "UNDELETE" : "DELETE";
+	//echo '<td><a href="'.$rowid.'">'.$delvalue.'</a></td>';
+	//echo '<td><input type="submit" name="action" value="DELETE"></td>';
+	echo '<td><input type="button" name="method" id="delete'+rowid+'" value="'.$delvalue.'" onclick="deleteItem('+rowid+',\''.$delvalue.'\');"></td>';
+	echo '<td><input type="button" name="action" id="update'+rowid+'" value="UPDATE" onclick="parseForm('+rowid+');"></td></tr>';
+
+
+	console.log("insRow .. data1: "+data1+", data2: "+data2+", data3: "+data3);
+	var x = document.getElementById('0_row');
+	var new_row = x.rows[0].cloneNode(true);
+	var len = x.rows.length;
+	if (len > 60) {
+		x.removeChild(x.lastChild);
+	}
+	new_row.cells[0].innerHTML = rownumber;
+	new_row.cells[1].innerHTML = data1;
+	//new_row.cells[2].innerHTML = data2;
+	new_row.cells[2].innerHTML = "";
+	new_row.cells[3].innerHTML = data3;
+	new_row.cells[4].innerHTML = formatDate(new Date());
+	var newcolor = 0;
+	//var newbgcolor = 0;
+	if (isrunning) {
+		newcolor = calculateColor();
+	} else {
+		newcolor = calculateBG(data1);
+	}
+	
+	var sw = screen.width;
+	var value = parseInt((xres/sw*100), 10);
+	//var dlblue = calculateDayColor()
+	new_row.style.background = "linear-gradient(to right, #000 0%, rgb(0,"+newcolor+",30) "+value+"%, #000 100%)";
+	new_row.classList.add('tablerow');
+	new_row.onmouseover = function() {editAuroraRowBG2(this)};
+
+	x.insertAdjacentElement('afterbegin', new_row);
+	rownumber++;
+
+
+}
+
+function hideOldest() {
+
+}
+
+function hideDeleted() {
+
+}
+
+function reload() {
+
+}
+
 // Update item
 function parseForm(rowid) {
 	var artist,title,quote,url,link2,info1,info2;

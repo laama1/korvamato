@@ -14,7 +14,7 @@ class RESTapiForKorvamato {
 		require_once('db.php');
         $this->db = new korvamatodb;
 		$this->getMethod();
-		$this->printTable();
+		//$this->printTable();
 	}
 	
 	private function getMethod() {
@@ -28,14 +28,11 @@ class RESTapiForKorvamato {
 
 		if ($this->DEBUG == 1) {
 			//$this->db->pi("path info: ".$pinf);
-			$this->db->pi("method: $method");
-			//var_dump($method);
-			$this->db->pi("input (json decoded):");
-			var_dump($input);
+			$this->db->pi(__FUNCTION__.':'.__LINE__.": method: $method");
+			$this->db->pa($input, __FUNCTION__.':'.__LINE__.": input (json decoded)");
 			echo "<br>";
 
-			$this->db->pi("request:");
-			var_dump($request);
+			$this->db->pa($request, __FUNCTION__.':'.__LINE__.": request");
 			echo "<br><br>";
 		}
 		
@@ -43,7 +40,7 @@ class RESTapiForKorvamato {
 		// retrieve the table and key from the path TODO: validate table
 		$table = preg_replace('/[^a-z0-9_]+/i','',array_shift($request));
 		if ($table == '') {
-			$this->db->pe("no table given.");
+			$this->db->pe(__FUNCTION__.':'.__LINE__.": no table given.");
 			$this->printNoTable();
 			return;
 		}
@@ -84,8 +81,8 @@ class RESTapiForKorvamato {
 				$seto.=($values[$i]==null ? "?":'?'); // bind later
 			}
 			$sett = '('.$set1.') VALUES ('.$set2.')';
-			$this->db->pi("SQL SET part: $sett");
-			$this->db->pi("SQL SETO part: $seto");
+			$this->db->pi(__FUNCTION__.':'.__LINE__.": SQL SET part: $sett");
+			$this->db->pi(__FUNCTION__.':'.__LINE__.": SQL SETO part: $seto");
 		}
 		
 		// create SQL based on HTTP method
@@ -97,7 +94,7 @@ class RESTapiForKorvamato {
 				$sql = "select rowid,* from $table order by rowid desc limit 1";
 			}
 			$result = $this->db->getResultsFromDBQuery($sql);
-			$this->db->pa($result, "GET result..");
+			//$this->db->pa($result, __FUNCTION__.':'.__LINE__.": GET result..");
 			echo json_encode($result);
 			return;
 			break;
@@ -113,7 +110,7 @@ class RESTapiForKorvamato {
 			//return false;
 			break;
 		case 'POST':
-			$this->db->pa($_POST, "POST (not decoded)");
+			$this->db->pa($_POST, __FUNCTION__.':'.__LINE__.": POST (not decoded)");
 			//$sql = "insert into `$table` $set";
 			$sql = "insert into $table $sett";
 			//$this->db->pi("POST SQL: $sql");
@@ -126,7 +123,7 @@ class RESTapiForKorvamato {
 			//return false;
 			break;
 		case 'DELETE':
-			$this->db->pi("DELETE data..");
+			$this->db->pi(__FUNCTION__.':'.__LINE__.": DELETE data..");
 
 			$deleted = isset($input['deleted']) ? intval($input['deleted']) : 0;	// 0 = default, not deleted
 			//$sql = "update `$table` set deleted = $deleted where rowid = $key";
@@ -134,7 +131,7 @@ class RESTapiForKorvamato {
 			$params2 = array($deleted, $key);
 			$result = $this->db->bindSQL($sql2, $params2);
 			if ($result !== false) {
-				$this->db->pi("dodi, coolness!");
+				$this->db->pi(__FUNCTION__.':'.__LINE__.": dodi, coolness!");
 				echo json_encode(array($key));
 				return json_encode(array($key));
 			}
@@ -218,7 +215,7 @@ class RESTapiForKorvamato {
 		exit;
 	}
 	private function printTable() {
-		include dirname(__FILE__).$this->tablename . '.html';
+		include dirname(__FILE__).'/'.$this->tablename . '.html';
 	}
 
 	private function print_html_footer() {
