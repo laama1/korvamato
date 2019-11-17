@@ -7,7 +7,7 @@ class RESTapiForKorvamato {
 // Requirements: php-json (debian, fedora)
 
 	protected $db;
-	protected $DEBUG = 1;
+	protected $DEBUG = 0;
 	private $tablename = '';
 
 	public function __construct() {

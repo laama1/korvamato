@@ -3,8 +3,8 @@
 <head>
 	<title>KORVAMADOT demo</title>
 	<link rel="stylesheet" type="text/css" href="korvamadot.css">
-	<script src="korvamadot.js"></script>
 	<script type="text/javascript" charset="utf-8" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="korvamadot.js"></script>
 </head>
 <body>
 	<h1 class="center">Korvamadot</h1>
@@ -13,7 +13,7 @@
 	<input type="button" onClick="hideOldest();" value="Hide oldest">
 	<input type="button" onClick="reload();" value="Reload">
 
-	<table>
+	<table id="matotable">
 		<tr>
 			<th>ID</th><th>Nick</th><th>Date<br><small>(last edited)</small></th><th>Artist</th><th>Title</th><th>Quote/Lyrics</th>
 			<th>Info1</th><th>Info2</th><th>Link1</th><th>Link2</th>
@@ -34,6 +34,7 @@
 			<td><input type="button" name="action" id="addnew" value="SAVE" onclick="addNew('new');"></td>
 		</tr>
 	</table>
-
+<div id="debug"></div>
+<div id="debug1"></div>
 </body>
 </html>

@@ -57,7 +57,7 @@ function addNew(butid) {
 
 	$.ajax({
 		type: "POST",
-		url: "korvamadot/0",
+		url: "index.php/korvamadot/0",
 		//data: '{"nick" : "' + nick + '", "quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "channel" : "www", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '", "lastedit" : ' +ledit+'}',
 		data: '{"nick" : "' + nick + '", "quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "channel" : "www", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
 		dataType: "json",
@@ -84,10 +84,15 @@ function addNew(butid) {
 	});
 }
 
-function addLine(rowid, deleted, arg) {
-	var delclass = deleted == '1' ? 'deleted' : 'undeleted';
+function addLine(arg) {
+	//console.log('type: '+ typeof(arg));
+	if (typeof(arg) === 'undefined') {
+		return;
+	}
+	console.log('addLine rowid: '+arg['rowid']);
+	var delclass = arg['DELETED'] == '1' ? 'deleted' : 'undeleted';
 	//echo '<fieldset name="id_'.$rowid.'">'."\n";
-	print '<tr id="' +rowid+ '_row" class="'+delclass+'"><td>' +rowid+ '</td>';
+	/*print '<tr id="' +rowid+ '_row" class="'+delclass+'"><td>' +rowid+ '</td>';
 	echo '<td><p id="'+rowid+'_nick">' +$arg['NICK']+'</p></td>';
 	echo '<td><p id="'+rowid+'_date">' . date('j.m.Y H:i:s', $arg['PVM']) .'</p></td>';
 	echo '<td><input id="'+rowid+'_artist" type="text" name="artist" value="'+$arg['ARTIST']+'"></td>';
@@ -103,39 +108,76 @@ function addLine(rowid, deleted, arg) {
 	echo '<td><input type="button" name="method" id="delete'+rowid+'" value="'.$delvalue.'" onclick="deleteItem('+rowid+',\''.$delvalue.'\');"></td>';
 	echo '<td><input type="button" name="action" id="update'+rowid+'" value="UPDATE" onclick="parseForm('+rowid+');"></td></tr>';
 
-
-	console.log("insRow .. data1: "+data1+", data2: "+data2+", data3: "+data3);
-	var x = document.getElementById('0_row');
-	var new_row = x.rows[0].cloneNode(true);
-	var len = x.rows.length;
+*/
+	//console.log("insRow .. data1: "+data1+", data2: "+data2+", data3: "+data3);
+	var x = document.getElementById('matotable');
+	var new_row = x.rows[2].cloneNode(true);
+	//var new_row = x.cloneNode(true);
+	/*var len = x.rows.length;
 	if (len > 60) {
 		x.removeChild(x.lastChild);
-	}
-	new_row.cells[0].innerHTML = rownumber;
-	new_row.cells[1].innerHTML = data1;
-	//new_row.cells[2].innerHTML = data2;
-	new_row.cells[2].innerHTML = "";
-	new_row.cells[3].innerHTML = data3;
-	new_row.cells[4].innerHTML = formatDate(new Date());
+	}*/
+	new_row.cells[0].innerHTML = arg['rowid'];
+	new_row.cells[1].childNodes[0].value = arg['NICK'];
+	new_row.cells[2].innerHTML = formatUnixDate(arg['PVM']);
+	new_row.cells[3].childNodes[0].value = arg['ARTIST'];
+	new_row.cells[4].childNodes[0].value = arg['TITLE'];
+	new_row.cells[5].childNodes[0].value = arg['QUOTE'];
+	new_row.cells[6].childNodes[0].value = arg['INFO1'];
+	new_row.cells[7].childNodes[0].value = arg['INFO2'];
+	new_row.cells[8].childNodes[0].value = arg['LINK1'];
+	new_row.cells[9].childNodes[0].value = arg['LINK2'];
+	
+	var btn = document.createElement("INPUT");
+	btn.setAttribute("type", "button");
+	btn.id = 'delete_'+arg['rowid'];
+	//btn.onclick = 'deleteitem("'+arg['rowid']+'","'+arg['DELETED']+'")';
+	btn.addEventListener("click", function(){ deleteItem(arg['rowid'], arg['deleted']);});
+	btn.value = arg['DELETED'] == 1 ? 'UNDELETE' : 'DELETE';
+	btn.classList.add();
+	new_row.cells[10].innerHTML = '';
+	new_row.cells[10].appendChild(btn);
+	new_row.cells[11].childNodes[0].value = 'UPDATE';
+	new_row.classList.add(delclass);
 	var newcolor = 0;
 	//var newbgcolor = 0;
-	if (isrunning) {
+	/*if (isrunning) {
 		newcolor = calculateColor();
 	} else {
 		newcolor = calculateBG(data1);
-	}
+	}*/
 	
-	var sw = screen.width;
+	/*var sw = screen.width;
 	var value = parseInt((xres/sw*100), 10);
 	//var dlblue = calculateDayColor()
 	new_row.style.background = "linear-gradient(to right, #000 0%, rgb(0,"+newcolor+",30) "+value+"%, #000 100%)";
 	new_row.classList.add('tablerow');
 	new_row.onmouseover = function() {editAuroraRowBG2(this)};
+*/
+	x.insertAdjacentElement('beforeend', new_row);
+	//rownumber++;
 
-	x.insertAdjacentElement('afterbegin', new_row);
-	rownumber++;
+
+}
+
+function updateTable(arg) {
+	var alength = arg.length;
+	console.log("populate table .."+alength);
+	var obj = JSON.parse(arg);
+
+	$.each(obj,function(index, value){
+		//console.log('My array has at position ' + index + ', this value: ' + value);
+	});
 
 
+	for (var i = 0; i < alength; i++) {
+		console.log(obj[i]);
+		//var jstime = jsutime(data[i][3]);
+		//console.log("jstime:" +jstime);
+		console.log(obj[i]);
+		//addLine(obj[i][0], obj[i][2], obj[i]);
+		addLine(obj[i]);
+	}
 }
 
 function hideOldest() {
@@ -146,8 +188,45 @@ function hideDeleted() {
 
 }
 
-function reload() {
+function formatUnixDate(timestamp) {
+	var tempdate = new Date(timestamp*1000);
+	return formatDate(tempdate);
+}
 
+function formatDate(date) {
+	var day = date.getDate();
+	var monthIndex = date.getMonth();
+	var year = date.getFullYear();
+	var minutes = date.getMinutes();
+	var hours = date.getHours();
+	return hours + ":" +minutes+ " " +day + '.' + (monthIndex +1) +'.' + year;
+}
+
+function reloadData() {
+$.ajax({
+	type: "GET",
+	url: "index.php/korvamadot/",
+	//data: '{"quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
+	//dataType: "json",
+	//contentType: "application/json; charset=utf-8",
+	//contentType: "application/json",
+	success: function(msg) {
+		document.getElementById("debug1").innerHTML = '<pre>'+msg+'</pre>';
+		//console.log("reloadData Success: " + msg);
+		updateTable(msg);
+	},
+	error: function(msg, textStatus, error) {
+		//document.getElementById("debug2").innerHTML = msg.responseText;
+		console.log("parseForm error objecti %o <<<", msg);
+		console.log("parseForm textStatus:" +textStatus);
+		console.log("parseForm msg.responseText: "+msg.responseText);
+		console.log("faLe.");
+	}
+}).fail(function (jqXHR, textStatus, error) {
+	document.getElementById("debug2").innerHTML = jqXHR.responseText;
+	console.log("parseForm Error: " + jqXHR.responseText + ", textStatus "+textStatus+", error: "+error);
+	console.log(jqXHR);
+});
 }
 
 // Update item
@@ -173,7 +252,7 @@ function parseForm(rowid) {
 		contentType: "application/json; charset=utf-8",
 		//contentType: "application/json",
 		success: function(msg) {
-			document.getElementById("debug1").innerHTML = msg;
+			document.getElementById("debug1").innerHTML = '<pre>'+msg+'</pre>';
 			console.log("parseForm Success: " + msg);
 			updateLine(msg, 'yellow');
 		},
@@ -267,4 +346,5 @@ $(document).ready(function() {
 	$("th").click(function() {
 	//$(this).hide();
 	});
+	reloadData();
 });
