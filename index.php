@@ -1,4 +1,5 @@
 <?php
+require_once('db.php');
 class RESTapiForKorvamato {
 // AUTHOR: Lasse Pihlainen
 // CREATED: x.y.z
@@ -11,8 +12,12 @@ class RESTapiForKorvamato {
 	private $tablename = '';
 
 	public function __construct() {
-		require_once('db.php');
-        $this->db = new korvamatodb;
+		
+		if ($this->DEBUG) {
+			http_response_code(500);
+		}
+
+        $this->db = new apidb();
 		$this->getMethod();
 		//$this->printTable();
 	}
@@ -41,11 +46,13 @@ class RESTapiForKorvamato {
 		$table = preg_replace('/[^a-z0-9_]+/i','',array_shift($request));
 		if ($table == '') {
 			$this->db->pe(__FUNCTION__.':'.__LINE__.": no table given.");
+			http_response_code(500);
 			$this->printNoTable();
 			return;
 		}
 		$this->tablename = $table;
 		if ($this->db->setDB($table) == false) {
+			http_response_code(500);
 			echo json_encode(array("DIED when setting DB"));
 			die();
 		}
@@ -123,7 +130,7 @@ class RESTapiForKorvamato {
 			//return false;
 			break;
 		case 'DELETE':
-			$this->db->pi(__FUNCTION__.':'.__LINE__.": DELETE data..");
+			$this->db->pi(__FUNCTION__.':'.__LINE__.": DELETE data from table: $table, rowid: $key");
 
 			$deleted = isset($input['deleted']) ? intval($input['deleted']) : 0;	// 0 = default, not deleted
 			//$sql = "update `$table` set deleted = $deleted where rowid = $key";
@@ -132,25 +139,16 @@ class RESTapiForKorvamato {
 			$result = $this->db->bindSQL($sql2, $params2);
 			if ($result !== false) {
 				$this->db->pi(__FUNCTION__.':'.__LINE__.": dodi, coolness!");
-				echo json_encode(array($key));
-				return json_encode(array($key));
+				#echo json_encode(array($key));
+				echo json_encode(array('rowid' => $key, 'value' => $deleted));
+				return json_encode(array('rowid' => $key, 'value' => $deleted));
 			}
 			//return false;
 			break;
-		/*	
 		case 'PATCH':
-			#$this->pi("PATCH REQUEST");
-			$sql = "update $table set $seto where rowid = $key";
-			$this->db->pi("PATCH!!! $sql");
-			$result = $this->db->bindSQL($sql, $values);
-			if ($result !== false) {
-				$this->db->pi("dodi, coolness2!");
-				echo json_encode(array($key));
-				return json_encode(array($key));
-			}
-			//return false;
+			$this->pi('PATCH REQUEST');
+
 			break;
-		*/
 		default:
 			http_response_code(404);
 			echo json_encode(array("nutinbits"));

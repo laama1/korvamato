@@ -2,12 +2,12 @@
 
 // AUTHOR: Lasse Pihlainen
 // CREATED: 22.10.2017
-// Edited: 23.10.2017, 20.12.2017, 27.2.2018
+// Edited: 23.10.2017, 20.12.2017, 27.2.2018, 17.11.2019
 // LICENSE: BSD
 
 
-class korvamatodb /*extends SQLite3*/ {
-	protected $dbpath = 'korvamadot.db';	// 14.3.2018: test database..
+class apidb /*extends SQLite3*/ {
+	protected $dbpath;	// 14.3.2018: test database..
 	protected $table = '';
 	//protected $dbpath;
 	protected $db;
@@ -16,12 +16,14 @@ class korvamatodb /*extends SQLite3*/ {
 	protected $debuglines = array();
 
 	public function __construct($arg = null) {
-		if ($arg != null) {
-			$this->dbpath = $arg.'.db';
+		if ($arg == null) {
+			$this->pe('no arg given');
+			return;
 		}
+		$this->dbpath = dirname(__FILE__).'/'.$arg.'.db';
+		$this->pi($this->dbpath);
 		$this->date = date("H:i:s");
-		$this->db = new PDO("sqlite:$this->dbpath");
-		$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		$this->createDBConnection();
 	}
 
 	/**
@@ -130,7 +132,7 @@ class korvamatodb /*extends SQLite3*/ {
 
 	public function bindSQL($query = false, $params = false) {
 		if ($query == false || $params == false) return false;
-		$this->pi("bindSQL query: $query");
+		$this->pi(__FUNCTION__.':'.__LINE__." bindSQL query: $query, dbpath: $this->dbpath");
 		$this->pa($params, "bindSQL params");
 		try {
 			if ($pdostmt = $this->db->prepare($query)) {
@@ -178,7 +180,7 @@ class korvamatodb /*extends SQLite3*/ {
 
 	public function setDB($name = false) {
 		if ($name === false) return false;
-		$this->dbpath = $name.'.db';
+		$this->dbpath = dirname(__FILE__).'/'.$name.'.db';
 		return $this->createDBConnection();
 	}
 
