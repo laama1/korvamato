@@ -95,8 +95,13 @@ class RESTapiForKorvamato {
 		// create SQL based on HTTP method
 		switch ($method) {
 		case 'GET':
+			if (!isset($key)) {
+				//$this->printTable();
+				//break;
+			}
 			// Get all from DB if $key not set
-			$sql = "select rowid,* from $table".($key ? " WHERE rowid = $key" : ''). " ORDER BY rowid asc LIMIT 100;";
+			//$sql = "select rowid,* from $table".($key ? " WHERE rowid = $key" : ''). " ORDER BY rowid asc LIMIT 100;";
+			$sql = "select rowid,* from $table".($key ? " WHERE rowid = $key" : ''). " ORDER BY rowid asc;";
 			if ($key == 'latest') {
 				$sql = "select rowid,* from $table order by rowid desc limit 1";
 			}
@@ -111,23 +116,22 @@ class RESTapiForKorvamato {
 			$sql = "update $table set $seto where rowid = $key";
 			$result = $this->db->bindSQL($sql, $values);
 			if ($result !== false) {
-				echo json_encode(array($key));
+				echo json_encode(array('rowid' => $key));
 				return $key;
 			}
-			//return false;
 			break;
 		case 'POST':
 			$this->db->pa($_POST, __FUNCTION__.':'.__LINE__.": POST (not decoded)");
 			//$sql = "insert into `$table` $set";
-			$sql = "insert into $table $sett";
+			//$sql = "insert into $table $sett";
+			$sql = "insert into $table $sett; SELECT distinct rowid from korvamadot order by rowid desc;";
 			//$this->db->pi("POST SQL: $sql");
-			//$result = $this->db->insertIntoDB($sql);
-			$result = $this->db->bindSQL($sql, $values);
+			$result = $this->db->bindSQL($sql);
+			//$result = $this->db->bindSQL($sql, $values);
 			if ($result !== false) {
-				echo json_encode(array($key));
-				return $key;
+				echo json_encode(array('rowid' => $result));
+				return $result;
 			}
-			//return false;
 			break;
 		case 'DELETE':
 			$this->db->pi(__FUNCTION__.':'.__LINE__.": DELETE data from table: $table, rowid: $key");
@@ -143,7 +147,6 @@ class RESTapiForKorvamato {
 				echo json_encode(array('rowid' => $key, 'value' => $deleted));
 				return json_encode(array('rowid' => $key, 'value' => $deleted));
 			}
-			//return false;
 			break;
 		case 'PATCH':
 			$this->pi('PATCH REQUEST');
@@ -160,38 +163,13 @@ class RESTapiForKorvamato {
 		if (!$result) {
 			http_response_code(500);
 			$this->db->pi("No results.");
-			die(json_encode(array("kaputt")));
+			//die(json_encode(array("kaputt")));
+			return(json_encode(array("kaputt")));
 		} else {
 			echo json_encode(array($key));
 		}
 		http_response_code(200);
 		
-	}
-
-
-	private function print_table_line($arg = null) {
-		if ($arg === null) return;
-		$rowid = $arg['rowid'];
-		$class = $arg['DELETED'] == '1' ? 'deleted' : 'undeleted';
-		echo "\n";
-		//echo '<fieldset name="id_'.$rowid.'">'."\n";
-		echo '<tr id="'.$rowid.'_row" class="'.$class.'"><td>' . $rowid ."</td>";
-		echo '<td><p id="'.$rowid.'_nick">' . $arg['NICK'] ."</p></td>";
-		echo '<td><p id="'.$rowid.'_date">' . date('j.m.Y H:i:s', $arg['PVM']) ."</p></td>";
-		echo '<td><input id="'.$rowid.'_artist" type="text" name="artist" value="'.$arg['ARTIST'].'"></td>';
-		echo '<td><input id="'.$rowid.'_title" type="text" name="title" value="'.$arg['TITLE'].'"></td>';
-		echo '<td><textarea id="'.$rowid.'_quote" name="quote">' . $arg['QUOTE'] ."</textarea></td>";
-		echo '<td><textarea id="'.$rowid.'_info1" name="info1" class="small">' . $arg['INFO1'] ."</textarea></td>";
-		echo '<td><textarea id="'.$rowid.'_info2" name="info2" class="small">' . $arg['INFO2'] ."</textarea></td>";
-		echo '<td><input id="'.$rowid.'_url" type="url" name="link1" value="' . $arg['LINK1'] .'"></td>';
-		echo '<td><input id="'.$rowid.'_link2" type="url" name="link2" value="' . $arg['LINK2'] .'"></td>';
-		$delvalue = ($arg['DELETED'] == "1") ? "UNDELETE" : "DELETE";
-		//echo '<td><a href="'.$rowid.'">'.$delvalue.'</a></td>';
-		//echo '<td><input type="submit" name="action" value="DELETE"></td>';
-		echo '<td><input type="button" name="method" id="delete'.$rowid.'" value="'.$delvalue.'" onclick="deleteItem('.$rowid.',\''.$delvalue.'\');"></td>';
-		echo '<td><input type="button" name="action" id="update'.$rowid.'" value="UPDATE" onclick="parseForm('.$rowid.');"></td></tr>';
-		//echo "\n</fieldset>";
-		echo PHP_EOL;
 	}
 
 	private function print_html_header() {
@@ -213,7 +191,8 @@ class RESTapiForKorvamato {
 		exit;
 	}
 	private function printTable() {
-		include dirname(__FILE__).'/'.$this->tablename . '.html';
+		//include dirname(__FILE__).'/'.$this->tablename . '.html';
+		//include dirname(__FILE__).'/korvamadot.html';
 	}
 
 	private function print_html_footer() {

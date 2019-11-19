@@ -84,25 +84,26 @@ class apidb /*extends SQLite3*/ {
 	}
 
 	# insert line into Database
-	public function insertIntoDB($sqlString = null) {
+	public function insertIntoDB($sqlString = null, $params = null) {
 		if ($sqlString === null) return false;
-		$this->pi("insertIntoDB sqlString: " .$sqlString);
+		$this->pi(__FUNCTION__.": sqlString: " .$sqlString);
 		try {
 			if ($pdostmt = $this->db->prepare($sqlString)) {
-				if ($pdostmt->execute()) {
+				if ($pdostmt->execute($params)) {
 					$this->db = null;
+					//return $pdostmt->lastInsertRowID();
 					return true;
 				} else {
-					$this->pe("insertIntoDB ERROR.. $sqlString");
+					$this->pe(__FUNCTION__.": ERROR.. $sqlString");
 					#$this->pa($pdostmt);
 				}
 			} else {
-				$this->pe("insertIntoDB prepare statement error.");//: ".$pdostmt->errorInfo);
+				$this->pe(__FUNCTION__.": prepare statement error.");//: ".$pdostmt->errorInfo);
 			}
 		} catch(PDOException $e) {
-			$this->pe("insertIntoDB PDOException: ".$e);
+			$this->pe(__FUNCTION__.": PDOException: ".$e);
 		} catch(EXCeption $e) {
-			$this->pe("insertIntoDB Exception: ".$e);
+			$this->pe(__FUNCTION__.": Exception: ".$e);
 		}
 		$this->db = null;
 		return false;
@@ -138,6 +139,7 @@ class apidb /*extends SQLite3*/ {
 			if ($pdostmt = $this->db->prepare($query)) {
 				//$this->pa($pdostmt, "bindSQL pdostmt");
 				if ($result = $pdostmt->execute($params)) {
+
 					$this->pa($result, "bindSQL Result from query");
 					return $result;
 				}
