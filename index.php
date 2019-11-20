@@ -26,13 +26,13 @@ class RESTapiForKorvamato {
 
 		// get the HTTP method, path and body of the request
 		$method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : false;
-		$pinf = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : false;
-		$request = explode('/', trim($pinf, '/'));
+		$path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : false;
+		$request = explode('/', trim($path, '/'));
 		$input = json_decode(file_get_contents('php://input'),true);
 		$result = false;
 
 		if ($this->DEBUG == 1) {
-			//$this->db->pi("path info: ".$pinf);
+			//$this->db->pi("path info: ".$path);
 			$this->db->pi(__FUNCTION__.':'.__LINE__.": method: $method");
 			$this->db->pa($input, __FUNCTION__.':'.__LINE__.": input (json decoded)");
 			$this->db->pa($request, __FUNCTION__.':'.__LINE__.": request");
@@ -121,10 +121,11 @@ class RESTapiForKorvamato {
 			//$sql = "insert into `$table` $set";
 			$sql = "insert into $table $setInsert";
 			#$sql = "insert into $table $setInsert; SELECT distinct rowid from $table order by rowid desc;";
-			//$this->db->pi("POST SQL: $sql");
+			$this->db->pi(__FUNCTION__.':'.__LINE__.":POST SQL: $sql");
 			$result = $this->db->bindSQL($sql);
-			$result2 = $this->db->bindSQL('select last_insert_rowid()');
+			$result2 = $this->db->bindSQL('select sqlite3_last_insert_rowid()');
 			//$result = $this->db->bindSQL($sql, $values);
+			echo json_encode(array('result1' => $result, 'result2' => $result2));
 			if ($result2 !== false) {
 				echo json_encode(array('rowid' => $result2));
 				return;
@@ -146,7 +147,7 @@ class RESTapiForKorvamato {
 			}
 			break;
 		case 'PATCH':
-			$this->pi('PATCH REQUEST');
+			$this->db->pi('PATCH REQUEST');
 
 			break;
 		default:
@@ -159,8 +160,8 @@ class RESTapiForKorvamato {
 		// die if SQL statement failed
 		if (!$result) {
 			http_response_code(500);
-			$this->db->pi("No results.");
-			echo json_encode(array("kaputt"));
+			$this->db->pi(__LINE__.":No results.");
+			echo json_encode(array('error' => 'kaputt'));
 			return;
 		}
 

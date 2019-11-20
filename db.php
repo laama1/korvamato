@@ -7,12 +7,11 @@
 
 
 class apidb /*extends SQLite3*/ {
-	protected $dbpath;	// 14.3.2018: test database..
+	protected $dbpath;
 	protected $table = '';
 	private $createTable = 0;		// if new tables should be created
-	//protected $dbpath;
 	protected $db;
-	protected $DEBUG = 0;
+	protected $DEBUG = 1;
 	protected $date;
 	protected $debuglines = array();
 
@@ -104,7 +103,7 @@ class apidb /*extends SQLite3*/ {
 				$this->pe(__FUNCTION__.": prepare statement error.");//: ".$pdostmt->errorInfo);
 			}
 		} catch(PDOException $e) {
-			$this->pe(__FUNCTION__.": PDOException: ".$e);
+			$this->pe(__FUNCTION__.": PDOException: ".print_r($e,1));
 		} catch(EXCeption $e) {
 			$this->pe(__FUNCTION__.": Exception: ".$e);
 		}
@@ -152,7 +151,7 @@ class apidb /*extends SQLite3*/ {
 			$this->pe("bindSQL DB prepare Erröör.");
 			return false;
 		} catch(PDOException $e) {
-			$this->pe("bindSQL ".$e);
+			$this->pe("bindSQL ".print_r($e,1));
 		} catch(Exception $e) {
 			$this->pe("bindSQL Exception: ".$e);
 		}
