@@ -5,7 +5,7 @@ class RESTapiForKorvamato {
 // CREATED: x.y.z
 // Edited: 20.12.2017, 27.2.2018, 13.3.2018
 // LICENSE: BSD
-// Requirements: php-json (debian, fedora)
+// Requirements: php-json
 
 	protected $db;
 	protected $DEBUG = 0;
@@ -35,10 +35,7 @@ class RESTapiForKorvamato {
 			//$this->db->pi("path info: ".$pinf);
 			$this->db->pi(__FUNCTION__.':'.__LINE__.": method: $method");
 			$this->db->pa($input, __FUNCTION__.':'.__LINE__.": input (json decoded)");
-			echo "<br>";
-
 			$this->db->pa($request, __FUNCTION__.':'.__LINE__.": request");
-			echo "<br><br>";
 		}
 		
 
@@ -46,7 +43,7 @@ class RESTapiForKorvamato {
 		$table = preg_replace('/[^a-z0-9_]+/i','',array_shift($request));
 		if ($table == '') {
 			$this->db->pe(__FUNCTION__.':'.__LINE__.": no table given.");
-			http_response_code(500);
+			//http_response_code(500);
 			$this->printNoTable();
 			return;
 		}
@@ -54,12 +51,11 @@ class RESTapiForKorvamato {
 		if ($this->db->setDB($table) == false) {
 			http_response_code(500);
 			echo json_encode(array("DIED when setting DB"));
-			die();
+			return;
 		}
 		$key = array_shift($request);
 		//$this->db->pi("key number: $key, table name: $table");
 
-		// escape the columns and values from the input object
 		$columns = 0;
 		$values = null;
 		if ($input) {
@@ -74,25 +70,24 @@ class RESTapiForKorvamato {
 		}
 		
 		// build the SET part of the SQL command
-		$seto = '';
+		$setUpdate = '';
 		$set1 = '';
 		$set2 = '';
-		$sett = '';
+		$setInsert = '';
 		if ($values) {
 			for ($i=0; $i < count($columns); $i++) {
-				$seto .= ($i>0 ? ', ' : '').'`'.$columns[$i].'` = ';
+				$setUpdate .= ($i>0 ? ', ' : '').'`'.$columns[$i].'` = ';
 				$set1 .= ($i>0 ? ', ' : '').$columns[$i];
 				//$set2 .=($values[$i]===null ? 'NULL':'"'.$values[$i].'"');
 				$set2 .=($i>0 ? ', ' : '').($values[$i]===null ? '?':'?');
-				//$seto.=($values[$i]==null ? "''":'?'); // bind later
-				$seto.=($values[$i]==null ? "?":'?'); // bind later
+				$setUpdate.=($values[$i]==null ? 'NULL':'?');
 			}
-			$sett = '('.$set1.') VALUES ('.$set2.')';
-			$this->db->pi(__FUNCTION__.':'.__LINE__.": SQL SET part: $sett");
-			$this->db->pi(__FUNCTION__.':'.__LINE__.": SQL SETO part: $seto");
+			$setInsert = "($set1) VALUES ($set2)";
+			//$this->db->pi(__FUNCTION__.':'.__LINE__.": SQL SET part: $setInsert");
+			//$this->db->pi(__FUNCTION__.':'.__LINE__.": SQL SETO part: $setUpdate");
 		}
 		
-		// create SQL based on HTTP method
+		// run SQL based on HTTP method
 		switch ($method) {
 		case 'GET':
 			if (!isset($key)) {
@@ -112,40 +107,42 @@ class RESTapiForKorvamato {
 			break;
 		case 'PUT':
 		case 'PATCH':
+			// FIXME / TODO
 			//$sql = "update `$table` set $set where rowid=$key";
-			$sql = "update $table set $seto where rowid = $key";
+			$sql = "update $table set $setUpdate where rowid = $key";
 			$result = $this->db->bindSQL($sql, $values);
 			if ($result !== false) {
 				echo json_encode(array('rowid' => $key));
-				return $key;
+				return;
 			}
 			break;
 		case 'POST':
 			$this->db->pa($_POST, __FUNCTION__.':'.__LINE__.": POST (not decoded)");
 			//$sql = "insert into `$table` $set";
-			//$sql = "insert into $table $sett";
-			$sql = "insert into $table $sett; SELECT distinct rowid from korvamadot order by rowid desc;";
+			$sql = "insert into $table $setInsert";
+			#$sql = "insert into $table $setInsert; SELECT distinct rowid from $table order by rowid desc;";
 			//$this->db->pi("POST SQL: $sql");
 			$result = $this->db->bindSQL($sql);
+			$result2 = $this->db->bindSQL('select last_insert_rowid()');
 			//$result = $this->db->bindSQL($sql, $values);
-			if ($result !== false) {
-				echo json_encode(array('rowid' => $result));
-				return $result;
+			if ($result2 !== false) {
+				echo json_encode(array('rowid' => $result2));
+				return;
 			}
 			break;
 		case 'DELETE':
+			// TEST
 			$this->db->pi(__FUNCTION__.':'.__LINE__.": DELETE data from table: $table, rowid: $key");
 
 			$deleted = isset($input['deleted']) ? intval($input['deleted']) : 0;	// 0 = default, not deleted
 			//$sql = "update `$table` set deleted = $deleted where rowid = $key";
-			$sql2 = "update $table set deleted = ? where rowid = ?";
+			$sqldel = "update $table set deleted = ? where rowid = ?";
 			$params2 = array($deleted, $key);
-			$result = $this->db->bindSQL($sql2, $params2);
+			$result = $this->db->bindSQL($sqldel, $params2);
 			if ($result !== false) {
 				$this->db->pi(__FUNCTION__.':'.__LINE__.": dodi, coolness!");
-				#echo json_encode(array($key));
 				echo json_encode(array('rowid' => $key, 'value' => $deleted));
-				return json_encode(array('rowid' => $key, 'value' => $deleted));
+				return;
 			}
 			break;
 		case 'PATCH':
@@ -155,7 +152,7 @@ class RESTapiForKorvamato {
 		default:
 			http_response_code(404);
 			echo json_encode(array("nutinbits"));
-			return false;
+			return;
 		}
 		$this->db->disco();
 
@@ -163,12 +160,11 @@ class RESTapiForKorvamato {
 		if (!$result) {
 			http_response_code(500);
 			$this->db->pi("No results.");
-			//die(json_encode(array("kaputt")));
-			return(json_encode(array("kaputt")));
-		} else {
-			echo json_encode(array($key));
+			echo json_encode(array("kaputt"));
+			return;
 		}
-		http_response_code(200);
+
+		//http_response_code(200);
 		
 	}
 
