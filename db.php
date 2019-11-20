@@ -9,6 +9,7 @@
 class apidb /*extends SQLite3*/ {
 	protected $dbpath;	// 14.3.2018: test database..
 	protected $table = '';
+	private $createTable = 0;		// if new tables should be created
 	//protected $dbpath;
 	protected $db;
 	protected $DEBUG = 0;
@@ -17,7 +18,7 @@ class apidb /*extends SQLite3*/ {
 
 	public function __construct($arg = null) {
 		if ($arg == null) {
-			$this->pe('no arg given');
+			//$this->pe('no arg given');
 			return;
 		}
 		$this->dbpath = dirname(__FILE__).'/'.$arg.'.db';
@@ -31,6 +32,7 @@ class apidb /*extends SQLite3*/ {
 	 */
 	private function createDBConnection() {
 		$this->db = null;
+		if ($this->createTable != 1 && !file_exists($this->dbpath)) return;
 		$this->db = new PDO("sqlite:$this->dbpath");
 		$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		return true;
@@ -43,15 +45,15 @@ class apidb /*extends SQLite3*/ {
 	# print errors
 	public function pe($arg = null) {
 		if ($arg == null || $this->DEBUG != 1) return;
-		echo "[ERROR $this->date] ".$arg . "<br><br>\n";
-		$this->debuglines[] = "[ERROR $this->date] ".$arg . "<br><br>\n";
+		echo "[ERROR $this->date] ".$arg . PHP_EOL;
+		$this->debuglines[] = "[ERROR $this->date] ".$arg. PHP_EOL;
 	}
 
 	# print info
 	public function pi($arg = null) {
 		if ($arg == null || $this->DEBUG != 1) return;
-		echo "[INFO $this->date] ".$arg ."<br><br>\n";
-		$this->debuglines[] = "[INFO $this->date] ".$arg ."<br><br>\n";
+		echo "[INFO $this->date] ".$arg . PHP_EOL;
+		$this->debuglines[] = "[INFO $this->date] ".$arg . PHP_EOL;
 	}
 
 	# debug print ARRAY
@@ -59,12 +61,13 @@ class apidb /*extends SQLite3*/ {
 		if ($arg == null || $this->DEBUG != 1) return;
 		echo "[ARRAY $this->date $title] ";
 		print_r($arg);
-		echo "<br><br>\n";
-		$this->debuglines[] = "[ARRAY $this->date $title] ".print_r($arg, true)."<br><br>\n";
+		//echo "<br><br>\n";
+		$this->debuglines[] = "[ARRAY $this->date $title] ".print_r($arg, true). PHP_EOL;
 	}
 
 	# create new database for our project
 	private function createDB () {
+		if ($this->createTable != 1) return;
 		$this->pi("Creating Database for Korvamato");
 
 		$sqlString = "CREATE VIRTUAL TABLE korvamadot using FTS4(NICK,PVM,QUOTE,INFO1,INFO2,CHANNEL,ARTIST,TITLE,LINK1,LINK2,DELETED);";
