@@ -18,7 +18,7 @@ function onMouseUpdate(e) {
 	xres = e.pageX;
 }
 
-window.onload = maintimer();
+window.onload = maintimer();			// FIXME
 
 function getLatest() {
 	console.log("getLatest ..");
