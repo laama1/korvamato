@@ -3,6 +3,9 @@
 // LICENSE: BSD
 
 "use strict";
+let hide_deleted_lines = 0;
+let dataset;
+
 
 // Delete item
 function deleteItem(butid, deleted) {
@@ -50,7 +53,7 @@ function addNew() {
 	//ledit = Date.now().getUnixTime();
 	var date = new Date();
 	ledit = date.toISOString();
-	console.log("ledit: "+ledit);
+	//console.log("ledit: "+ledit);
 	//console.log("Add new line, Nick: " + nick + ", Artist: " + artist + ", Title: " + title + 
 	//", Quote: " + quote + ", URL: " + url + ", Link2: " + link2 +
 	//", Info1: " + info1 + ", Info2: " + info2+ ", POST next..");
@@ -89,35 +92,16 @@ function addLine(beforeafter, arg) {
 	if (typeof(arg) === 'undefined') {
 		return;
 	}
+	if (arg.DELETED == 1 && hide_deleted_lines == 1) {
+		return;
+	}
 	var row_id = arg['rowid'];
-	console.log('addLine rowid: '+row_id);
+	//console.log('addLine rowid: '+row_id);
 	var delclass = arg['DELETED'] == '1' ? 'deleted' : 'undeleted';
-	//echo '<fieldset name="id_'.$rowid.'">'."\n";
-	/*print '<tr id="' +rowid+ '_row" class="'+delclass+'"><td>' +rowid+ '</td>';
-	echo '<td><p id="'+rowid+'_nick">' +$arg['NICK']+'</p></td>';
-	echo '<td><p id="'+rowid+'_date">' . date('j.m.Y H:i:s', $arg['PVM']) .'</p></td>';
-	echo '<td><input id="'+rowid+'_artist" type="text" name="artist" value="'+$arg['ARTIST']+'"></td>';
-	echo '<td><input id="'+rowid+'_title" type="text" name="title" value="'.$arg['TITLE'].'"></td>';
-	echo '<td><textarea id="'+rowid+'_quote" name="quote">' . $arg['QUOTE'] .'</textarea></td>';
-	echo '<td><textarea id="'+rowid+'_info1" name="info1" class="small">' . $arg['INFO1'] .'</textarea></td>';
-	echo '<td><textarea id="'+rowid+'_info2" name="info2" class="small">' . $arg['INFO2'] .'</textarea></td>';
-	echo '<td><input id="'+rowid+'_url" type="url" name="link1" value="' . $arg['LINK1'] .'"></td>';
-	echo '<td><input id="'+rowid+'_link2" type="url" name="link2" value="' . $arg['LINK2'] .'"></td>';
-	$delvalue = ($arg['DELETED'] == "1") ? "UNDELETE" : "DELETE";
-	//echo '<td><a href="'.$rowid.'">'.$delvalue.'</a></td>';
-	//echo '<td><input type="submit" name="action" value="DELETE"></td>';
-	echo '<td><input type="button" name="method" id="delete'+rowid+'" value="'.$delvalue.'" onclick="deleteItem('+rowid+',\''.$delvalue.'\');"></td>';
-	echo '<td><input type="button" name="action" id="update'+rowid+'" value="UPDATE" onclick="parseForm('+rowid+');"></td></tr>';
 
-*/
-	//console.log("insRow .. data1: "+data1+", data2: "+data2+", data3: "+data3);
 	var x = document.getElementById('matotable');
 	var new_row = x.rows[2].cloneNode(true);
-	//var new_row = x.cloneNode(true);
-	/*var len = x.rows.length;
-	if (len > 60) {
-		x.removeChild(x.lastChild);
-	}*/
+
 	new_row.cells[0].innerHTML = row_id;
 
 	new_row.cells[1].childNodes[0].value = arg['NICK'];
@@ -190,23 +174,53 @@ function addLine(beforeafter, arg) {
 
 }
 
-function updateTable(arg) {
-	var obj = JSON.parse(arg);
-	var oblen = Object.keys(obj).length;
-	console.log('oblen: '+oblen);
-	for (var i = 0; i < oblen; i++) {
-		console.log('i:'+i);
-		console.log(obj[i]);
-		addLine('beforeend', obj[i]);
+function clearTable() {
+	console.log('clearTable');
+	var table = document.getElementById('matotable');
+	var r = 0;
+	r = table.rows.length -1;
+	var row;
+	while (row = table.rows[r--]) {
+		if (parseInt(row.id) > 0) {
+			//console.log('element');
+			//console.log(row);
+			row.parentNode.removeChild(row);
+		} else {
+			var breakpoint = 1;
+		}
 	}
 }
 
-function hideOldest() {
+function updateTable(arg) {
+	console.log('updateTable');
+	try {
+		dataset = arg;		// save to (overwrite) global variable
+		var oblen = Object.keys(arg).length;
+		console.log('oblen: '+oblen);
+		for (var i = 0; i < oblen; i++) {
+			addLine('beforeend', arg[i]);
+		}
+	} catch (error) {
+		console.log('updateTable error!');
+		console.log(error);
+	}
 
 }
 
-function hideDeleted() {
+function hideOldest() {
+	console.log('hideOldest');
+}
 
+function hideDeleted(value) {
+	console.log('hideDeleted');
+	hide_deleted_lines = value;
+}
+
+function reloadButton() {
+	console.log('reloadButton');
+	dataset = null;
+	clearTable();
+	reloadData();
 }
 
 function formatUnixDate(timestamp) {
@@ -223,36 +237,36 @@ function formatDate(date) {
 	return hours + ":" +minutes+ " " +day + '.' + (monthIndex +1) +'.' + year;
 }
 
+// get all data again from server
 function reloadData() {
-$.ajax({
-	type: "GET",
-	url: "index.php/korvamadot/0",
-	//url: "/korvamadot/0",
-	//data: '{"quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
-	//dataType: "json",
-	//contentType: "application/json; charset=utf-8",
-	//contentType: "application/json",
-	success: function(msg) {
-		//document.getElementById("debug1").innerHTML = '<pre>'+msg+'</pre>';
-		//console.log("reloadData Success: " + msg);
-		updateTable(msg);
-	},
-	error: function(msg, textStatus, error) {
-		//document.getElementById("debug1").innerHTML = msg.responseText;
-		console.log("reloadData error objecti %o <<<", msg);
-		console.log("reloadData textStatus:" +textStatus);
-		console.log("reloadData msg.responseText: "+msg.responseText);
-		console.log("faLe.");
-	}
-}).fail(function (jqXHR, textStatus, error) {
-	document.getElementById("debug1").innerHTML = jqXHR.responseText;
-	console.log("reloadData Error: " + jqXHR.responseText + ", textStatus "+textStatus+", error: "+error);
-	console.log(jqXHR);
-});
+	console.log('reloadData');
+	$.ajax({
+		type: "GET",
+		url: "index.php/korvamadot/0",
+		//url: "/korvamadot/0",
+		//data: '{"quote" : "' + quote + '", "info1" : "' + info1 + '", "info2" : "' + info2 + '", "artist" : "' + artist + '", "title" : "' + title + '", "link1" : "' + url + '", "link2" : "' + link2 + '"}',
+		dataType: "json",
+		success: function(msg) {
+			console.log("reloadData Success: ");
+			console.log(msg);
+			updateTable(msg);
+		},
+		error: function(msg, textStatus, error) {
+			console.log("reloadData error objecti %o <<<", msg);
+			console.log("reloadData textStatus:" +textStatus);
+			console.log("reloadData msg.responseText: "+msg.responseText);
+			console.log("faLe.");
+		}
+	}).fail(function (jqXHR, textStatus, error) {
+		document.getElementById("debug1").innerHTML = jqXHR.responseText;
+		console.log("reloadData Error: " + jqXHR.responseText + ", textStatus "+textStatus+", error: "+error);
+		console.log(jqXHR);
+	});
 }
 
 // Update item
 function parseForm(rowid) {
+	console.log('parseForm');
 	var artist,title,quote,url,link2,info1,info2;
 	artist = document.getElementById(rowid+"_artist").value;
 	title = document.getElementById(rowid+"_title").value;
@@ -294,7 +308,7 @@ function parseForm(rowid) {
 
 function updateLine(butid, color) {
 	// update line in the UI view table
-	console.log("######  Update >" + butid + "< pressed! Color: "+color);
+	console.log("updateLine >" + butid + "< pressed! Color: "+color);
 	blinkRow(butid, color);
 }
 
@@ -365,9 +379,6 @@ function blinkRow(elementid, color) {
 	//},100);
 }
 
-$(document).ready(function() {
-	$("th").click(function() {
-	//$(this).hide();
-	});
+document.addEventListener("DOMContentLoaded", function() {
 	reloadData();
-});
+  });
